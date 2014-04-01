@@ -1,0 +1,85 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout 
+    xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:orientation="vertical" >
+
+    <EditText
+        android:id="@+id/TaskName"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="Taskname" />
+
+    <TextView
+        android:id="@+id/DescriptionLabel"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="Description: " />   
+        
+    <EditText
+        android:id="@+id/TaskDescription"
+        android:layout_width="fill_parent"
+        android:layout_height="wrap_content"
+        android:text="Taskname" />        
+    
+    <TextView
+        android:id="@+id/TimeLabel"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="Date and Time:" />
+
+    <LinearLayout 
+        android:id="@+id/DateTimeButtonWrapper"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="horizontal">
+        
+        <Button
+            android:id="@+id/DateButton"
+            android:text="Date"
+            android:layout_weight="1"
+            android:layout_width="0dp"
+            android:onClick="DoPickDate"
+            android:layout_height="wrap_content" />
+                
+        <Button
+            android:id="@+id/TimeButton"
+            android:text="Time"
+            android:layout_weight="1"
+            android:layout_width="0dp"
+            android:onClick="DoPickTime"
+            android:layout_height="wrap_content" />
+                
+    </LinearLayout>
+    
+    <!-- 
+    <RelativeLayout
+        android:id="@+id/DateTimeWrapper"
+        android:layout_width="fill_parent"
+        android:layout_height="wrap_content"
+        android:layout_below="@id/DateTimeButtonWrapper">
+    
+	    <DatePicker
+	        android:id="@+id/TaskDate"
+	        android:layout_width="wrap_content"
+	        android:layout_height="wrap_content"
+	        android:layout_alignParentLeft="true"
+	        />
+	
+	    <TimePicker
+	        android:id="@+id/TaskTime"
+	        android:layout_width="wrap_content"
+	        android:layout_height="wrap_content"
+	        android:layout_alignParentLeft="true"
+	        android:layout_below="@id/TaskDate" />
+
+    </RelativeLayout>-->
+    
+    <TextView
+        android:id="@+id/AlertLabel"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="Alerts" />
+
+</LinearLayout>

@@ -1,0 +1,33 @@
+div.HeaderWrapper, div.FooterWrapper{
+	margin-top: 10px;
+	margin-bottom: 10px;
+	margin-left: 10%;
+	margin-right: 10%;
+	padding: 10px;
+	text-align: center;	
+}
+
+div.TaskContainer {
+	border-width: 1px;
+	border-style: solid;
+	border-color: black;
+	background-color:#FFFFCC;
+	margin-top: 10px;
+	margin-bottom: 10px;
+	margin-left: 10%;
+	margin-right: 10%;
+	padding: 15px;
+}
+
+textarea {
+	width: 50%;
+}
+
+h2 {
+	margin: 5px;
+}
+
+h3 {
+	margin: 15px;
+	margin-bottom: 1px;
+}
