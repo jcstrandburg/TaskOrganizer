@@ -1,17 +1,12 @@
 package com.example.taskorganizer;
 
-import java.io.BufferedReader;
-import java.io.InputStream;
-import java.io.InputStreamReader;
-import java.sql.Timestamp;
 import java.util.ArrayList;
-import java.util.Date;
+import java.util.List;
 
-import org.apache.http.HttpEntity;
-import org.apache.http.HttpResponse;
+import org.apache.http.NameValuePair;
+import org.apache.http.client.entity.UrlEncodedFormEntity;
 import org.apache.http.client.methods.HttpPost;
-import org.apache.http.impl.client.DefaultHttpClient;
-import org.apache.http.params.BasicHttpParams;
+import org.apache.http.message.BasicNameValuePair;
 import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
@@ -21,9 +16,18 @@ import android.util.SparseArray;
 
 public class Model {
 
+	private static final String baseURL = "http://www.strandburg.us/taskorganizer/droid/";
+	private static final String dataUpdateURL = baseURL + "getdata.php";
+	private static final String addTaskURL = baseURL + "addtask.php";
+	private static final String addAlertURL = baseURL + "addalert.php";
+	private static final String updateTaskURL = baseURL + "updatetask.php";
+	private static final String updateAlertURL = baseURL + "updatealert.php";
+	private static final String deleteTaskURL = baseURL + "deletetask.php";
+	private static final String deleteAlertURL = baseURL + "deletealert.php";	
 	
 	public static class Task {
 		
+		int id;
 		String name;
 		String desc;
 		String whenString;
@@ -33,6 +37,7 @@ public class Model {
 		
 		public Task( JSONObject obj, int gen) throws JSONException {
 			
+			id = obj.getInt( "TaskID");
 			name = obj.getString( "TaskName");
 			desc = obj.getString( "TaskDesc");
 			whenString = obj.getString( "TaskTime");
@@ -55,8 +60,78 @@ public class Model {
 		}
 	}
 	
+	public static class DataResults {
+		
+		public JSONObject myObj;
+		
+		public DataResults( JSONObject jobj) {
+			
+			myObj = jobj;
+		}
+		
+		public Boolean isSuccess() {
+			try {
+				Boolean success = myObj.getBoolean( "success");
+				return success;
+			}
+			catch (Exception e) {
+				return false;
+			}			
+		}
+
+		public JSONArray getResultsAsArray() {
+			
+			try {
+				JSONArray array = myObj.getJSONArray( "results");
+				return array;
+			} catch (JSONException e) {
+				
+				Log.e( "JSON Error", e.getMessage());
+				return null;
+			}
+		}
+		
+		public JSONObject getResultsAsObject() {
+			
+			try {
+				JSONObject o = myObj.getJSONObject( "results");
+				return o;
+			} catch (JSONException e) {
+				
+				Log.e( "JSON Error", e.getMessage());
+				return null;
+			}
+		}
+		
+		public String getErrorCode() {
+			try {
+				return myObj.getString( "error-code");
+			} catch (JSONException e) {
+				
+				Log.e( "JSON Error", e.getMessage());
+				return null;
+			}			
+		}
+		
+		public String getErrorMessage() {
+			try {
+				return myObj.getString( "error");
+			} catch (JSONException e) {
+				
+				Log.e( "JSON Error", e.getMessage());
+				return null;
+			}
+		}		
+	}
+	
+	public static interface DataHandler {
+
+		public void handleData( DataResults obj);
+	}
+	
 	public static SparseArray<Task> tasks = new SparseArray<Task>();
 	public static SparseArray<Alert> alerts = new SparseArray<Alert>();
+	private static ArrayList<DataModelListener> listeners = new ArrayList<DataModelListener>();
 	private static int generation = 0;
 	public static int lock = 0;
 	
@@ -70,33 +145,32 @@ public class Model {
 		Log.d("Model", String.format( "Unlocking Data (%d)", lock));
 	}
 	
-	static private void doDataUpdate() {
+	static public void doDataUpdate( DataResults res) {
 
 		generation++;
 		try {
-			
-			JSONObject obj = getJSONData();
-			if ( isSuccess(obj)) {
-				Log.d( "Model", "Got data");
+			if ( res.isSuccess()) {
 				
-				JSONArray results = getResults( obj);
+				Model.tasks.clear();
+				Model.alerts.clear();
+				JSONArray results = res.getResultsAsArray();
 				for ( int i = 0; i < results.length(); i++) {
 					JSONObject taskObj = results.getJSONObject( i);
 					Task task = new Task( taskObj, generation);
 					
-					String s = String.format( "(%s): (%s) @(%s)", task.name, task.desc, task.whenString);
-					Log.d( "Model", s);
+					tasks.put( task.id, task);					
 					
 					JSONArray alertsArray = taskObj.getJSONArray( "Alerts");
 					for ( int j = 0; j < alertsArray.length(); j++) {
 						JSONObject alertObj = alertsArray.getJSONObject( j);
 						Alert alert = new Alert( task, alertObj, generation);
 						
-						s = String.format( "   Alert %d %d", alert.id, alert.offset);
-						Log.d( "Model", s);
+						task.alerts.add( alert);
+						alerts.put( alert.id, alert);
 					}					
 				}
 				
+				notifyListeners();				
 			}
 			else {
 				Log.e( "Model",  "Data aquisition failed");
@@ -108,114 +182,207 @@ public class Model {
 		}
 	}
 	
-	static public void forceDataUpdate() {
-		Log.d("Model", "Locking before forcing data update");
-		Log.d("Model", "Forcing Data Update");
-		
-		doDataUpdate();
-		
-		Log.d("Model", "Unlocking after forcing data update");
-	}
-	
-	static public JSONObject getJSONData() {
-		
-		DefaultHttpClient httpclient = new DefaultHttpClient( new BasicHttpParams());
-		HttpPost httppost = new HttpPost( "http://www.strandburg.us/taskorganizer/droid/gettasks.php");
-		//httppost.setHeader( "Content-type", "application/json");
-		InputStream inputStream = null;
-		String result = null;
-		
+	static private HttpPost CreateHttpPost( String URL, List<NameValuePair> postVars) {
+
 		try {
-			HttpResponse response = httpclient.execute( httppost);
-			HttpEntity entity = response.getEntity();
-			
-			inputStream = entity.getContent();
-			BufferedReader reader = new BufferedReader( new InputStreamReader( inputStream, "UTF-8"), 8);
-			StringBuilder sb = new StringBuilder();
-			
-			String line = null;
-			while ((line = reader.readLine()) != null ) {
-				sb.append( line + "\n");
-			}
-			result = sb.toString();
-			Log.d("JSON", result);
-			
-			
-			JSONObject jobj = new JSONObject( result);
-			
-			return jobj;
-		}
-		catch  ( JSONException e ) {
-			Log.e( "JSON exception", e.getMessage());
-			
-			
-			return null;
+			HttpPost h = new HttpPost( URL); 
+			if ( postVars != null)
+				h.setEntity( new UrlEncodedFormEntity(postVars));
+			//h.setHeader( "Content-type", "application/json");
+			return h;
 		}
 		catch ( Exception e) {
-			Log.e( "Other exception", e.getMessage());
-			String s = e.getClass().toString();
-			Log.e( "exception", s);
-			
+			Log.e( "CreateHttpPost", e.getMessage());
 			return null;
 		}
 	}
 	
-	static public Boolean isSuccess( JSONObject obj) {
-		
-		try {
-			Boolean success = obj.getBoolean( "success");
-			return success;
-		}
-		catch (Exception e) {
-			return false;
+	static public void startDataUpdate() {
+
+		HttpPost httppost = CreateHttpPost( dataUpdateURL, null);
+		DatabaseTask dbtask = new DatabaseTask( httppost);
+		dbtask.execute( new DataHandler() {
+							@Override
+							public void handleData( DataResults res) {
+								doDataUpdate( res);
+							}
+						});
+	}
+	
+	static public void addListener( DataModelListener x) {
+		if ( !listeners.contains( x)) {
+			listeners.add( x);
 		}
 	}
 	
-	static public JSONArray getResults( JSONObject obj) {
-		
-		try {
-			JSONArray array = obj.getJSONArray( "results");
-			return array;
-		} catch (JSONException e) {
-			
-			Log.e( "JSON Error", e.getMessage());
-			return null;
+	static public void removeListener( DataModelListener y) {
+		listeners.remove( y);
+	}
+	
+	static private void notifyListeners() {
+		for ( int i = 0; i < listeners.size(); ++i) {
+			listeners.get(i).onDataModelUpdated();
 		}
 	}
 	
-	static public String getErrorMessage( JSONObject obj) {
-		try {
-			String error = obj.getString( "error");
-			return error;
-		} catch (JSONException e) {
-			
-			Log.e( "JSON Error", e.getMessage());
-			return null;
-		}
+	static public void forceDataUpdate() {
+
+		startDataUpdate();
 	}
 	
 	static public void addTask() {
 		
+		HttpPost httpPost = CreateHttpPost( addTaskURL, null);
+		DatabaseTask dbTask = new DatabaseTask( httpPost);
+		dbTask.execute( new DataHandler() {
+							@Override
+							public void handleData( DataResults res) {
+								
+								try {
+									if ( res.isSuccess()) {
+										
+										JSONObject taskObj = res.getResultsAsObject();
+										Task task = new Task( taskObj, generation);
+										tasks.put( task.id, task);
+										notifyListeners();
+									}
+								}
+								catch ( Exception e) {
+									
+								}
+							}
+						});
 	}
 	
 	static public void updateTask( Task task) {
+
+		List<NameValuePair> postData = new ArrayList<NameValuePair>();
+		postData.add( new BasicNameValuePair(   "TaskID", String.valueOf( task.id)));
+		postData.add( new BasicNameValuePair( "TaskName", String.valueOf( task.name)));
+		postData.add( new BasicNameValuePair( "TaskDesc", String.valueOf( task.desc)));
+		HttpPost httpPost = CreateHttpPost( updateTaskURL, postData);
+		DatabaseTask dbTask = new DatabaseTask( httpPost);
+		dbTask.execute( new DataHandler() {
+
+							@Override
+							public void handleData( DataResults res) {
+								
+								try {
+									if ( res.isSuccess()) {
+										
+										notifyListeners();
+									}
+									else {
+										Log.e( "Model.deleteTask", "Failure");
+									}
+								}
+								catch ( Exception e) {
+									Log.e( "Model.deleteTask", e.getMessage());
+								}
+							}
+						});		
 		
+		notifyListeners();
 	}
 	
 	static public void deleteTask( Task task) {
-		
+
+		List<NameValuePair> postData = new ArrayList<NameValuePair>();
+		postData.add( new BasicNameValuePair( "TaskID", String.valueOf( task.id)));		
+		HttpPost httpPost = CreateHttpPost( deleteTaskURL, postData);
+		DatabaseTask dbTask = new DatabaseTask( httpPost);
+		dbTask.execute( new DataHandler() {
+
+							@Override
+							public void handleData( DataResults res) {
+								
+								Log.d("deleteTask", "handleData");
+								try {
+									if ( res.isSuccess()) {
+										
+										JSONObject obj = res.getResultsAsObject();
+										int taskID = obj.getInt( "TaskID");
+										tasks.remove( taskID);
+										notifyListeners();
+									}
+									else {
+										Log.e( "Model.deleteTask", "Failure");
+									}
+								}
+								catch ( Exception e) {
+									Log.e( "Model.deleteTask", e.getMessage());
+								}
+							}
+						});
 	}
 	
 	static public void addAlert( Task task) {
 		
+		List<NameValuePair> postData = new ArrayList<NameValuePair>();
+		postData.add( new BasicNameValuePair( "TaskID", String.valueOf( task.id)));			
+		HttpPost httpPost = CreateHttpPost( addAlertURL, postData);
+		DatabaseTask dbTask = new DatabaseTask( httpPost);
+		dbTask.execute( new DataHandler() {
+
+							@Override
+							public void handleData( DataResults res) {
+								
+								
+								try {
+									if ( res.isSuccess()) {
+										
+										JSONObject taskObj = res.getResultsAsObject();
+										int taskID = taskObj.getInt( "TaskID");
+										Task task = tasks.get( taskID);
+										Alert alert = new Alert( task, taskObj, generation);
+										task.alerts.add( alert);
+										alerts.put( alert.id, alert);
+										notifyListeners();
+									}
+								}
+								catch ( Exception e) {
+									
+								}
+							}
+						});
 	}
 	
 	static public void updateAlert( Alert alert) {
-		
+		Log.e("WIP", "Update alert not yet implemented");
 	}
 	
 	static public void deleteAlert( Alert alert) {
-		
+
+		List<NameValuePair> postData = new ArrayList<NameValuePair>();
+		postData.add( new BasicNameValuePair( "AlertID", String.valueOf( alert.id)));		
+		HttpPost httpPost = CreateHttpPost( deleteAlertURL, postData);
+		DatabaseTask dbTask = new DatabaseTask( httpPost);
+		dbTask.execute( new DataHandler() {
+
+							@Override
+							public void handleData( DataResults res) {
+								
+								Log.d("deleteAlert", "handleData");
+								try {
+									if ( res.isSuccess()) {
+										
+										JSONObject obj = res.getResultsAsObject();
+										int alertID = obj.getInt( "AlertID");
+										Alert alert = alerts.get( alertID);
+										alert.task.alerts.remove( alert);
+										alerts.remove( alertID);
+										
+										notifyListeners();
+									}
+									else {
+										Log.e( "Model.deleteAlert", "Failure");
+									}
+								}
+								catch ( Exception e) {
+									Log.e( "Model.deleteAlert", e.getMessage());
+								}
+							}
+						});
 	}
 
 }

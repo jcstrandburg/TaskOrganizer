@@ -21,6 +21,11 @@ import android.widget.ListView;
 
 public class MainActivity extends ActionBarActivity implements OnItemClickListener, DataModelListener {
 
+	List<String> listText = new ArrayList<String>();
+	ArrayAdapter<String> lvAdapter;
+	Boolean dataLoaded = false;
+	
+	
 	@Override
 	protected void onCreate(Bundle savedInstanceState) {
 		super.onCreate(savedInstanceState);
@@ -28,15 +33,27 @@ public class MainActivity extends ActionBarActivity implements OnItemClickListen
 		Log.d("MainActivity", "onCreate");
 		
 		setContentView(R.layout.fragment_main);
-		formatView();
+		Model.addListener( this);
+		
+		listText.add( "Loading...");
+		lvAdapter = new ArrayAdapter<String>( this, R.layout.text_list_fragment, listText);
+		ListView lv = (ListView)findViewById( R.id.TaskList);
+		lv.setAdapter( lvAdapter);		
+		lv.setOnItemClickListener( this);
+		Model.forceDataUpdate();		
 	}
 	
 	//user clicks on an item in the task list
 	public void onItemClick( AdapterView<?> l, View v, int position, long id) {
 		
-		Log.i( "Clicked", String.format( "You clicked item %d", position));
-		Intent intent = new Intent( this, TaskViewActivity.class);
-		startActivity( intent);		
+		if ( dataLoaded) {
+			Model.Task task = Model.tasks.valueAt( position);
+			Log.i( "Clicked", String.format( "You clicked item %d (%s)", position, task.name));
+			Intent intent = new Intent( this, TaskViewActivity.class);
+			intent.putExtra( "TaskID", task.id);
+					
+			startActivity( intent);
+		}
 	}
 	
 	public void DoPreferences( View view) {
@@ -52,6 +69,10 @@ public class MainActivity extends ActionBarActivity implements OnItemClickListen
 		}, 2014, 03, 28);
 		dpick.setTitle( "Hey Now");
 		dpick.show();
+	}
+	
+	public void DoNewTask( View view) {
+		Model.addTask();
 	}
 	
 	@Override
@@ -73,20 +94,6 @@ public class MainActivity extends ActionBarActivity implements OnItemClickListen
 		}
 		return super.onOptionsItemSelected(item);
 	}
-
-	private void formatView() {
-
-		//temporary 
-		List<String> l = new ArrayList<String>();
-		l.add( "Item 1");
-		l.add( "Potato");
-		l.add( "Blue");
-		ArrayAdapter<String> ad = new ArrayAdapter<String>( this, R.layout.text_list_fragment, l);
-		ListView lv = (ListView)findViewById( R.id.TaskList);
-		lv.setAdapter( ad);		
-		lv.setOnItemClickListener( this);
-	}
-	
 	
 	@Override
 	public void onStart() {
@@ -104,7 +111,7 @@ public class MainActivity extends ActionBarActivity implements OnItemClickListen
 	public void onResume() {
 		super.onResume();
 		Log.d("MainActivity", String.format( "onResume, %2d", Model.lock));
-		Model.forceDataUpdate();
+		//Model.forceDataUpdate();
 	}
 	
 	@Override
@@ -115,6 +122,7 @@ public class MainActivity extends ActionBarActivity implements OnItemClickListen
 	
 	@Override
 	public void onDestroy() {
+		Model.removeListener( this);
 		super.onDestroy();
 		Log.d("MainActivity", "onDestroy");
 	}
@@ -129,6 +137,12 @@ public class MainActivity extends ActionBarActivity implements OnItemClickListen
 	public void onDataModelUpdated() {
 		// TODO Auto-generated method stub
 		
+		dataLoaded = true;
+		listText.clear();
+		for ( int i = 0; i < Model.tasks.size(); i++) {
+			listText.add( Model.tasks.valueAt(i).name);
+		}		
+		lvAdapter.notifyDataSetChanged();
 	}
 		
 	

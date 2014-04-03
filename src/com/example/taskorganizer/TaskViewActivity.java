@@ -14,12 +14,16 @@ import android.content.Intent;
 import android.os.Bundle;
 import android.support.v7.app.ActionBarActivity;
 import android.util.Log;
+import android.view.KeyEvent;
 import android.view.View;
+import android.view.View.OnKeyListener;
+import android.view.inputmethod.InputMethodManager;
 import android.widget.AdapterView;
 import android.widget.AdapterView.OnItemClickListener;
 import android.widget.ArrayAdapter;
 import android.widget.Button;
 import android.widget.DatePicker;
+import android.widget.EditText;
 import android.widget.ListView;
 import android.widget.TimePicker;
 
@@ -30,8 +34,14 @@ import android.widget.TimePicker;
  */
 public class TaskViewActivity extends ActionBarActivity implements OnItemClickListener, DataModelListener {
 
+	List<String> listText = new ArrayList<String>();
+	ArrayAdapter<String> lvAdapter;
+	int taskID;
+	Model.Task task;
+	
 	View header;
 	View footer;
+	EditText taskName, taskDesc;
 	
 	Button dateButton, timeButton;
 
@@ -40,43 +50,89 @@ public class TaskViewActivity extends ActionBarActivity implements OnItemClickLi
 		super.onCreate(savedInstanceState);
 		
 		Log.d("TaskViewActivity", "onCreate");
+
+		Intent intent = getIntent();
+		taskID = intent.getIntExtra( "TaskID", -1);
+		if ( taskID >= 0 && (task = Model.tasks.get( taskID)) != null ) {
+			
+			Log.d("TaskView", String.format( "Loading task view for task id %d", task.id));
+			setContentView(R.layout.task_view);
+			formatView();
+			populateInterface();
+			Model.addListener( this);
+		}
+		else {
+			
+			Log.e("TaskView", "No task id provided or could not load task");
+			finish();
+		}
 		
-		setContentView(R.layout.task_view);
-		formatView();
 	}	
+	
+	private void hideKeyboard(View view) {
+	    InputMethodManager manager = (InputMethodManager) view.getContext()
+	            .getSystemService(INPUT_METHOD_SERVICE);
+	    if (manager != null)
+	        manager.hideSoftInputFromWindow(view.getWindowToken(), 0);
+	}
 	
 	void formatView() {
 		
-		//create the header
-		ListView lv = (ListView)findViewById( R.id.AlertList);		
+		//get handles on important interface elements, create header and footer
+		ListView lv = (ListView)findViewById( R.id.AlertList);
 		header = getLayoutInflater().inflate( R.layout.task_view_header, null);
 		footer = getLayoutInflater().inflate( R.layout.task_view_footer, null);
-		
+		lv.addHeaderView( header);		
+		lv.addFooterView( footer);		
 		dateButton = (Button)header.findViewById(R.id.DateTimeButtonWrapper).findViewById(R.id.DateButton);
 		timeButton = (Button)header.findViewById(R.id.DateTimeButtonWrapper).findViewById(R.id.TimeButton);
-		lv.addHeaderView( header);		
-		lv.addFooterView( footer);
+		taskName = (EditText)header.findViewById(R.id.TaskName);
+		taskDesc = (EditText)header.findViewById(R.id.TaskDescription);
+		lvAdapter = new ArrayAdapter<String>( this, R.layout.text_list_fragment, listText);		
 		
-		//temporary 
-		List<String> l = new ArrayList<String>();
-		l.add( "Alert A");
-		l.add( "Alert B");
-		l.add( "Alert C");	
-		l.add( "Alert D");
-		l.add( "Alert E");
-		l.add( "Alert F");	
-		l.add( "Alert G");
-		ArrayAdapter<String> ad = new ArrayAdapter<String>( this, R.layout.text_list_fragment, l);
-		lv.setAdapter( ad);	
-		lv.setOnItemClickListener( this);
+		OnKeyListener okl = new OnKeyListener() {
+							    public boolean onKey(View v, int keyCode, KeyEvent event) {
+							        if (keyCode == 66) {
+							            hideKeyboard(v);
+							            return true; //this is required to stop sending key event to parent
+							        }
+							        return false;
+							    }
+							};
+		taskName.setOnKeyListener( okl);
+		taskDesc.setOnKeyListener( okl);
+		
+		//create the list adapter and set it up and junk
+		lv.setAdapter( lvAdapter);	
+		lv.setOnItemClickListener( this);		
+
+		//force load the correct information from the data model
+		onDataModelUpdated();		
+	}
+	
+	public void populateInterface() {
+		
+		taskName.setText( task.name);
+		taskDesc.setText( task.desc);
 	}
 	
 	public void DoSaveTask( View view) {
-		Log.e("WIP", "Save task not yet implemented");
+		
+		Log.d("DoSaveTask",  "Getting task name");
+		task.name = taskName.getText().toString();
+		Log.d("DoSaveTask",  "Getting task desc");		
+		task.desc = taskDesc.getText().toString();
+		Log.d("DoSaveTask",  "Calling updateTask");		
+		Model.updateTask( task);
+		
+		Log.d("DoSaveTask", "Finishing...");
+		finish();
 	}
 	
 	public void DoDeleteTask( View view) {
-		Log.e("WIP", "Delete task not yet implemented");
+		
+		Model.deleteTask( task);
+		finish();		
 	}
 	
 	public void DoPickDate( View view) {
@@ -106,13 +162,22 @@ public class TaskViewActivity extends ActionBarActivity implements OnItemClickLi
 		dpick.setTitle( "Hey Now");
 		dpick.show();	
 	}
+	
+	public void DoAddAlert( View view) {
+		
+		Model.addAlert( task);		
+	}
 
 	//FOr when user clicks on alert list
 	@Override
 	public void onItemClick(AdapterView<?> arg0, View arg1, int position, long id) {
 
-		Log.d("Alert Clicked", String.format( "%d", position));
+		position--;
+		Model.Alert alert = task.alerts.get( position);		
+		Log.d("Alert Clicked", String.format( "%d %d", position, alert.id));
 		Intent intent = new Intent( this, AlertViewActivity.class);
+		intent.putExtra( "AlertID", alert.id);
+		
 		startActivity( intent);		
 	}
 	
@@ -145,6 +210,7 @@ public class TaskViewActivity extends ActionBarActivity implements OnItemClickLi
 	
 	@Override
 	public void onDestroy() {
+		Model.removeListener( this);
 		super.onDestroy();
 		Log.d("TaskView", "onDestroy");
 	}
@@ -157,8 +223,24 @@ public class TaskViewActivity extends ActionBarActivity implements OnItemClickLi
 
 	@Override
 	public void onDataModelUpdated() {
-		// TODO Auto-generated method stub
+
+		Log.d("TaskView", "onDataModelUpdated");
+		task = Model.tasks.get( taskID);
 		
+		if ( task != null ) {
+			
+			listText.clear();
+			for ( int i = 0; i < task.alerts.size(); i++) {
+				Model.Alert alert = task.alerts.get( i);
+				String s = String.format( "Alert %d (%d)", alert.id, alert.offset);			
+				listText.add( s);
+			}		
+			lvAdapter.notifyDataSetChanged();
+			populateInterface();
+		}
+		else {
+			Log.d("TaskView", String.format( "Unable to load task %d", taskID));
+		}
 	}
 			
 }

@@ -7,7 +7,7 @@
 
     <EditText
         android:id="@+id/TaskName"
-        android:layout_width="wrap_content"
+        android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:text="Taskname" />
 
@@ -52,29 +52,13 @@
             android:layout_height="wrap_content" />
                 
     </LinearLayout>
-    
-    <!-- 
-    <RelativeLayout
-        android:id="@+id/DateTimeWrapper"
-        android:layout_width="fill_parent"
-        android:layout_height="wrap_content"
-        android:layout_below="@id/DateTimeButtonWrapper">
-    
-	    <DatePicker
-	        android:id="@+id/TaskDate"
-	        android:layout_width="wrap_content"
-	        android:layout_height="wrap_content"
-	        android:layout_alignParentLeft="true"
-	        />
-	
-	    <TimePicker
-	        android:id="@+id/TaskTime"
-	        android:layout_width="wrap_content"
-	        android:layout_height="wrap_content"
-	        android:layout_alignParentLeft="true"
-	        android:layout_below="@id/TaskDate" />
 
-    </RelativeLayout>-->
+	<Button
+	    android:id="@+id/AddAlertButton"
+	    android:layout_width="fill_parent"
+	    android:layout_height="wrap_content"
+	    android:onClick="DoAddAlert"
+	    android:text="Add Alert" />	     
     
     <TextView
         android:id="@+id/AlertLabel"
