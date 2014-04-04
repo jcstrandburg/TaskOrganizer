@@ -30,7 +30,13 @@
     	android:layout_height="wrap_content"
     	android:onClick="DoPreferences"
     	android:text="Preferences" />
-
+	
+	<Button 
+        android:id="@+id/TestButton"
+    	android:layout_width="fill_parent"
+    	android:layout_height="wrap_content"
+    	android:onClick="DoTesting"
+    	android:text="Test" />
 	<Button 
 		android:id="@+id/NewTaskButton"
 		android:layout_width="fill_parent"

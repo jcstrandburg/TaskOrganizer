@@ -2,7 +2,7 @@
 
 require_once( "droidengine.php");
 
-$query = "SELECT T.TaskName, T.TaskID, T.TaskTime, T.TaskDesc, T.UserID, (SELECT COUNT( A.AlertID) FROM Alerts A WHERE A.TaskID = T.TaskID) AS AlertCount FROM Tasks T WHERE T.UserID='$userID'";
+$query = "SELECT T.TaskName, T.TaskID, T.TaskTime, T.TaskDesc, (SELECT COUNT( A.AlertID) FROM Alerts A WHERE A.TaskID = T.TaskID) AS AlertCount FROM Tasks T";
 $result = mysqli_query( $dbconn, $query) or FailAndDie();
 $tasks = array();
 

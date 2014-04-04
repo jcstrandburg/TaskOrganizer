@@ -1,8 +1,12 @@
 package com.example.taskorganizer;
 
 import java.util.ArrayList;
+import java.util.GregorianCalendar;
 import java.util.List;
 
+import android.app.AlarmManager;
+import android.app.PendingIntent;
+import android.content.Context;
 import android.content.Intent;
 import android.content.SharedPreferences;
 import android.os.Bundle;
@@ -33,6 +37,7 @@ public class MainActivity extends ActionBarActivity implements OnItemClickListen
 		
 		setContentView(R.layout.fragment_main);
 		Model.addListener( this);
+		Model.SetContext( this);
 		
 		listText.add( "Loading...");
 		lvAdapter = new ArrayAdapter<String>( this, R.layout.text_list_fragment, listText);
@@ -55,9 +60,19 @@ public class MainActivity extends ActionBarActivity implements OnItemClickListen
 		}
 	}
 	
-	public void DoPreferences( View view) {
+	public void DoTesting( View view) {
+
+		Long time = new GregorianCalendar().getTimeInMillis();
+		time += 1000;
 		
-		Model.testPost();
+		Intent intentAlarm = new Intent( this.getApplicationContext(), AlarmReceiver.class);
+		AlarmManager alarmManager = (AlarmManager)getSystemService( Context.ALARM_SERVICE);
+		
+		alarmManager.set( AlarmManager.RTC_WAKEUP, time-1, 
+				PendingIntent.getBroadcast( this,  1,  intentAlarm,  PendingIntent.FLAG_UPDATE_CURRENT));
+	}
+	
+	public void DoPreferences( View view) {
 		
 		Intent intent = new Intent( this, SettingsActivity.class);
 		startActivity( intent);
@@ -113,7 +128,7 @@ public class MainActivity extends ActionBarActivity implements OnItemClickListen
 		userPass.setText( sharedPrefs.getString( "user_pass", "userpass"));
 		intervalThing.setText( sharedPrefs.getString( "refresh_interval", "15"));
 		
-		//Model.forceDataUpdate();
+		Model.forceDataUpdate();
 	}
 	
 	@Override

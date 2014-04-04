@@ -30,6 +30,7 @@ global $dbconn;
 
 	$pass = md5( $pass);
 	$query = "SELECT * FROM Users WHERE UserName='$usr' AND UserPass='$pass'";
+	echo $query . "\n";
 	$result = mysqli_query( $dbconn, $query);
 	
 	if ( $row = mysqli_fetch_array( $result)) { 

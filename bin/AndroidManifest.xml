@@ -11,6 +11,7 @@
     <uses-permission android:name="android.permission.RECEIVE_BOOT_COMPLETED" />
     <uses-permission android:name="android.permission.INTERNET" />
     <uses-permission android:name="android.permission.VIBRATE" />
+    <uses-permission android:name="android.permission.SET_ALARM" />
 
     <application
         android:allowBackup="true"
@@ -28,17 +29,26 @@
         </activity>
         <activity android:name="com.example.taskorganizer.TaskViewActivity" />
         <activity android:name="com.example.taskorganizer.AlertViewActivity" />
-
-		<activity
+        <activity
             android:name="com.example.taskorganizer.SettingsActivity"
             android:label="@string/title_activity_settings" >
-        </activity>        
-        
+        </activity>
+
         <service
             android:name="com.example.taskorganizer.DatabaseService"
             android:exported="false" >
         </service>
 
+        <receiver
+            android:name="com.example.taskorganizer.AlarmReceiver"
+            android:enabled="true"
+            android:exported="true" >
+        </receiver>
+
+        <activity
+            android:name="com.example.taskorganizer.AlarmActivity"
+            android:label="@string/title_activity_test" >
+        </activity>
     </application>
 
 </manifest>

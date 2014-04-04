@@ -17,10 +17,29 @@ import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
 
+import android.app.AlarmManager;
+import android.app.PendingIntent;
+import android.content.Context;
+import android.content.Intent;
+import android.content.SharedPreferences;
+import android.preference.PreferenceManager;
 import android.util.Log;
 import android.util.SparseArray;
 
-public class Model {
+/*
+ * To do:
+ * 
+ * Individually handle alarm updates when alerts are added and deleted
+ * Determine when to save task and alert info, wait for save button or just always do it
+ * Set up a background task for db queries
+ * Handle data protection on the model, not sure how to do this with different activities and junk
+ * Prettify the interface
+ * Figure out a better way to handle authentication
+ * 
+ */
+
+
+public class Model extends android.app.Application {
 
 	private static final String baseURL = "http://www.strandburg.us/taskorganizer/droid/";
 	private static final String dataUpdateURL = baseURL + "getdata.php";
@@ -32,6 +51,7 @@ public class Model {
 	private static final String deleteAlertURL = baseURL + "deletealert.php";	
 	
 	final static SimpleDateFormat dateFormat = new SimpleDateFormat( "yyyy-MM-dd HH:mm:ss", Locale.ENGLISH);
+	private static Context context = null;
 	
 	public static class DateTime {
 		int month;
@@ -174,6 +194,10 @@ public class Model {
 	private static int generation = 0;
 	public static int lock = 0;
 	
+	static public void SetContext( Context c) {
+		context = c;
+	}
+	
 	static public void lockData() {
 		lock++;
 		Log.d("Model", String.format( "Locking Data (%d)", lock));
@@ -190,8 +214,9 @@ public class Model {
 		try {
 			if ( res.isSuccess()) {
 				
-				Model.tasks.clear();
-				Model.alerts.clear();
+				clearAlarms();
+				tasks.clear();
+				alerts.clear();
 				JSONArray results = res.getResultsAsArray();
 				for ( int i = 0; i < results.length(); i++) {
 					JSONObject taskObj = results.getJSONObject( i);
@@ -209,6 +234,7 @@ public class Model {
 					}					
 				}
 				
+				setAlarms();
 				notifyListeners();				
 			}
 			else {
@@ -221,6 +247,55 @@ public class Model {
 		}
 	}
 	
+	static private void clearAlarms() {
+	
+		for ( int i = 0; i < alerts.size(); ++i) {
+			
+			Alert alert = alerts.valueAt( i);
+			
+			AlarmManager am = (AlarmManager)getAppContext().getSystemService( Context.ALARM_SERVICE);
+			Intent intent = new Intent( getAppContext(), AlarmActivity.class);
+			PendingIntent pi = PendingIntent.getBroadcast( getAppContext(), alert.id, intent, Intent.FLAG_ACTIVITY_NEW_TASK);			
+			am.cancel( pi);
+		}
+	}
+	
+	static private void setAlarms() {
+		
+		Long nowTime = new GregorianCalendar().getTimeInMillis();
+		
+		for ( int i = 0; i < alerts.size(); ++i) {
+			
+			Alert alert = alerts.valueAt( i);
+			
+			AlarmManager am = (AlarmManager)getAppContext().getSystemService( Context.ALARM_SERVICE);
+			Intent intent = new Intent( getAppContext(), AlarmReceiver.class);
+			intent.putExtra( "AlertID", alert.id);
+			PendingIntent pi = PendingIntent.getBroadcast( getAppContext(), alert.id, intent, Intent.FLAG_ACTIVITY_NEW_TASK);
+
+			Long time = alert.task.when.getTime() - alert.offset*60000;
+
+			if ( time > nowTime) {
+				am.set( AlarmManager.RTC_WAKEUP, time, pi);
+			}
+		}
+	}
+	
+	static private void resetAlarm( Alert alert) {
+		
+		AlarmManager am = (AlarmManager)getAppContext().getSystemService( Context.ALARM_SERVICE);
+		Intent intent = new Intent( getAppContext(), AlarmActivity.class);
+		PendingIntent pi = PendingIntent.getBroadcast( getAppContext(), alert.id, intent, Intent.FLAG_ACTIVITY_NEW_TASK);
+		am.cancel( pi);
+		Long time = alert.task.when.getTime();
+		time -= alert.offset*60000;
+		am.set( AlarmManager.RTC_WAKEUP, time, pi);
+	}
+	
+	static private Context getAppContext() {
+		return context.getApplicationContext();
+	}
+	
 	static private HttpPost CreateHttpPost( String URL, List<NameValuePair> postVars) {
 
 		try {
@@ -229,10 +304,14 @@ public class Model {
 			if ( postVars == null )
 				postVars = new ArrayList<NameValuePair>();
 			
+			SharedPreferences sharedPrefs = PreferenceManager.getDefaultSharedPreferences( getAppContext());
+					
+			String username = sharedPrefs.getString( "user_name", "username");
+			String userpass = sharedPrefs.getString( "user_pass", "userpass");
 			
-			
-			postVars.add( new BasicNameValuePair( "UserName", "underwood"));
-			postVars.add( new BasicNameValuePair( "UserPass", "underwear"));
+						
+			postVars.add( new BasicNameValuePair( "UserName", username));
+			postVars.add( new BasicNameValuePair( "UserPass", userpass));
 			h.setEntity( new UrlEncodedFormEntity(postVars));
 			
 			return h;
@@ -333,20 +412,6 @@ public class Model {
 							}
 						});		
 	}
-	
-	static public void testPost() {
-
-		List<NameValuePair> postData = new ArrayList<NameValuePair>();
-		postData.add( new BasicNameValuePair(   "TaskID", "1"));
-		postData.add( new BasicNameValuePair( "TaskName", "abc"));
-		
-		HttpPost httpPost = CreateHttpPost( "http://www.strandburg.us/taskorganizer/droid/post.php", postData);
-		DatabaseTask dbTask = new DatabaseTask( httpPost);
-		dbTask.execute( new DataHandler() {
-							@Override
-							public void handleData( DataResults res) { }
-						});		
-	}	
 	
 	static public void deleteTask( Task task) {
 

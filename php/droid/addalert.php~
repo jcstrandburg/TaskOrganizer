@@ -5,7 +5,6 @@ require_once( "droidengine.php");
 if ( isset( $_POST["TaskID"]) ) {
 
 	$taskID = $_POST["TaskID"];
-
 	$query = "INSERT INTO Alerts (TaskID, AlertOffset) VALUES ('$taskID', '0')";
 	mysqli_query( $dbconn, $query);
 

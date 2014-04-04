@@ -6,6 +6,8 @@ foreach($_POST as $key => $value) {
   echo "$key => $value <br>\n";
 }
 
+$userID = Authenticate( $_POST["UserName"], $_POST["UserPass"]);
+
 echo "Authenticated with user id $userID<br>\n";
 
 
