@@ -2,7 +2,7 @@
 
 require_once( "droidengine.php");
 
-$query = "INSERT INTO Tasks (TaskName, TaskDesc, UserID) VALUES ('New Task', 'task description', 1)";
+$query = "INSERT INTO Tasks (TaskName, TaskDesc, UserID, TaskTime) VALUES ('New Task', 'task description', 1, NOW())";
 mysqli_query( $dbconn, $query);
 
 $id = mysqli_insert_id( $dbconn);

@@ -1,7 +1,13 @@
 package com.example.taskorganizer;
 
+import java.text.ParseException;
+import java.text.SimpleDateFormat;
 import java.util.ArrayList;
+import java.util.Calendar;
+import java.util.Date;
+import java.util.GregorianCalendar;
 import java.util.List;
+import java.util.Locale;
 
 import org.apache.http.NameValuePair;
 import org.apache.http.client.entity.UrlEncodedFormEntity;
@@ -25,24 +31,57 @@ public class Model {
 	private static final String deleteTaskURL = baseURL + "deletetask.php";
 	private static final String deleteAlertURL = baseURL + "deletealert.php";	
 	
+	final static SimpleDateFormat dateFormat = new SimpleDateFormat( "yyyy-MM-dd HH:mm:ss", Locale.ENGLISH);
+	
+	public static class DateTime {
+		int month;
+		int year;
+		int day;
+		int hours;
+		int minutes;
+	}
+	
 	public static class Task {
 		
 		int id;
 		String name;
 		String desc;
 		String whenString;
-		//DateTime when;
+		Date when;
 		ArrayList<Alert> alerts;
 		int generation;
 		
-		public Task( JSONObject obj, int gen) throws JSONException {
+		public Task( JSONObject obj, int gen) throws JSONException, ParseException {
 			
 			id = obj.getInt( "TaskID");
 			name = obj.getString( "TaskName");
 			desc = obj.getString( "TaskDesc");
 			whenString = obj.getString( "TaskTime");
+			when = dateFormat.parse( whenString);	
+			Log.d( "DateString", when.toString());
 			generation = gen;
 			alerts = new ArrayList<Alert>();
+		}
+		
+		public DateTime getDateTime() {
+			
+			DateTime dt = new DateTime();
+			Calendar cal = new GregorianCalendar();
+			cal.setTime( when);
+			
+			dt.year = cal.get( Calendar.YEAR);
+			dt.month = cal.get( Calendar.MONTH);
+			dt.day = cal.get( Calendar.DAY_OF_MONTH);
+			dt.hours = cal.get( Calendar.HOUR_OF_DAY);
+			dt.minutes = cal.get( Calendar.MINUTE);
+			
+			return dt;
+		}
+		
+		public void SetWhen( DateTime dt) {
+			Calendar cal = new GregorianCalendar();
+			cal.set( dt.year, dt.month, dt.day, dt.hours, dt.minutes);
+			when = cal.getTime();
 		}
 	}
 	
@@ -115,7 +154,7 @@ public class Model {
 		
 		public String getErrorMessage() {
 			try {
-				return myObj.getString( "error");
+				return myObj.getString( "error-message");
 			} catch (JSONException e) {
 				
 				Log.e( "JSON Error", e.getMessage());
@@ -185,10 +224,17 @@ public class Model {
 	static private HttpPost CreateHttpPost( String URL, List<NameValuePair> postVars) {
 
 		try {
-			HttpPost h = new HttpPost( URL); 
-			if ( postVars != null)
-				h.setEntity( new UrlEncodedFormEntity(postVars));
-			//h.setHeader( "Content-type", "application/json");
+			HttpPost h = new HttpPost( URL);
+			
+			if ( postVars == null )
+				postVars = new ArrayList<NameValuePair>();
+			
+			
+			
+			postVars.add( new BasicNameValuePair( "UserName", "underwood"));
+			postVars.add( new BasicNameValuePair( "UserPass", "underwear"));
+			h.setEntity( new UrlEncodedFormEntity(postVars));
+			
 			return h;
 		}
 		catch ( Exception e) {
@@ -246,6 +292,9 @@ public class Model {
 										tasks.put( task.id, task);
 										notifyListeners();
 									}
+									else {
+										Log.e( "Model.addTask", "Failure: "+res.getErrorCode()+", "+res.getErrorMessage());
+									}
 								}
 								catch ( Exception e) {
 									
@@ -260,6 +309,8 @@ public class Model {
 		postData.add( new BasicNameValuePair(   "TaskID", String.valueOf( task.id)));
 		postData.add( new BasicNameValuePair( "TaskName", String.valueOf( task.name)));
 		postData.add( new BasicNameValuePair( "TaskDesc", String.valueOf( task.desc)));
+		postData.add( new BasicNameValuePair( "TaskTime", dateFormat.format( task.when)));
+		
 		HttpPost httpPost = CreateHttpPost( updateTaskURL, postData);
 		DatabaseTask dbTask = new DatabaseTask( httpPost);
 		dbTask.execute( new DataHandler() {
@@ -273,17 +324,29 @@ public class Model {
 										notifyListeners();
 									}
 									else {
-										Log.e( "Model.deleteTask", "Failure");
+										Log.e( "Model.updateTask", "Failure: "+res.getErrorCode()+", "+res.getErrorMessage());
 									}
 								}
 								catch ( Exception e) {
-									Log.e( "Model.deleteTask", e.getMessage());
+									Log.e( "Model.updateTask", e.getMessage());
 								}
 							}
 						});		
-		
-		notifyListeners();
 	}
+	
+	static public void testPost() {
+
+		List<NameValuePair> postData = new ArrayList<NameValuePair>();
+		postData.add( new BasicNameValuePair(   "TaskID", "1"));
+		postData.add( new BasicNameValuePair( "TaskName", "abc"));
+		
+		HttpPost httpPost = CreateHttpPost( "http://www.strandburg.us/taskorganizer/droid/post.php", postData);
+		DatabaseTask dbTask = new DatabaseTask( httpPost);
+		dbTask.execute( new DataHandler() {
+							@Override
+							public void handleData( DataResults res) { }
+						});		
+	}	
 	
 	static public void deleteTask( Task task) {
 
@@ -306,7 +369,7 @@ public class Model {
 										notifyListeners();
 									}
 									else {
-										Log.e( "Model.deleteTask", "Failure");
+										Log.e( "Model.deleteTask", "Failure: "+res.getErrorCode()+", "+res.getErrorMessage());
 									}
 								}
 								catch ( Exception e) {
@@ -348,7 +411,30 @@ public class Model {
 	}
 	
 	static public void updateAlert( Alert alert) {
-		Log.e("WIP", "Update alert not yet implemented");
+		List<NameValuePair> postData = new ArrayList<NameValuePair>();
+		postData.add( new BasicNameValuePair(   "AlertID", String.valueOf( alert.id)));
+		postData.add( new BasicNameValuePair( "AlertOffset", String.valueOf( alert.offset)));
+		HttpPost httpPost = CreateHttpPost( updateAlertURL, postData);
+		DatabaseTask dbTask = new DatabaseTask( httpPost);
+		dbTask.execute( new DataHandler() {
+
+							@Override
+							public void handleData( DataResults res) {
+								
+								try {
+									if ( res.isSuccess()) {
+										
+										notifyListeners();
+									}
+									else {
+										Log.e( "Model.updateAlert", "Failure: "+res.getErrorCode()+", "+res.getErrorMessage());
+									}
+								}
+								catch ( Exception e) {
+									Log.e( "Model.deleteTask", e.getMessage());
+								}
+							}
+						});		
 	}
 	
 	static public void deleteAlert( Alert alert) {
@@ -375,7 +461,7 @@ public class Model {
 										notifyListeners();
 									}
 									else {
-										Log.e( "Model.deleteAlert", "Failure");
+										Log.e( "Model.deleteAlert", "Failure: "+res.getErrorCode()+", "+res.getErrorMessage());
 									}
 								}
 								catch ( Exception e) {

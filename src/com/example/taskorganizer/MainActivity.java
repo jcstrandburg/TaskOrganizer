@@ -3,21 +3,20 @@ package com.example.taskorganizer;
 import java.util.ArrayList;
 import java.util.List;
 
-import android.app.DatePickerDialog;
-import android.app.DatePickerDialog.OnDateSetListener;
 import android.content.Intent;
+import android.content.SharedPreferences;
 import android.os.Bundle;
+import android.preference.PreferenceManager;
 import android.support.v7.app.ActionBarActivity;
 import android.util.Log;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
-import android.widget.AdapterView.OnItemClickListener;
 import android.widget.AdapterView;
+import android.widget.AdapterView.OnItemClickListener;
 import android.widget.ArrayAdapter;
-import android.widget.Button;
-import android.widget.DatePicker;
 import android.widget.ListView;
+import android.widget.TextView;
 
 public class MainActivity extends ActionBarActivity implements OnItemClickListener, DataModelListener {
 
@@ -40,7 +39,7 @@ public class MainActivity extends ActionBarActivity implements OnItemClickListen
 		ListView lv = (ListView)findViewById( R.id.TaskList);
 		lv.setAdapter( lvAdapter);		
 		lv.setOnItemClickListener( this);
-		Model.forceDataUpdate();		
+		Model.forceDataUpdate();
 	}
 	
 	//user clicks on an item in the task list
@@ -58,17 +57,10 @@ public class MainActivity extends ActionBarActivity implements OnItemClickListen
 	
 	public void DoPreferences( View view) {
 		
-		DatePickerDialog dpick;
+		Model.testPost();
 		
-		dpick = new DatePickerDialog( this, new OnDateSetListener() {
-			public void onDateSet( DatePicker datepicker, int selectedyear, int selectedmonth, int selectedday) {
-				Log.d( "datepick", "she wants the d");
-				Button b = (Button)findViewById( R.id.PreferencesButton);
-				b.setText( String.format( "%02d/%02d/%04d", selectedmonth, selectedday, selectedyear));
-			}
-		}, 2014, 03, 28);
-		dpick.setTitle( "Hey Now");
-		dpick.show();
+		Intent intent = new Intent( this, SettingsActivity.class);
+		startActivity( intent);
 	}
 	
 	public void DoNewTask( View view) {
@@ -111,6 +103,16 @@ public class MainActivity extends ActionBarActivity implements OnItemClickListen
 	public void onResume() {
 		super.onResume();
 		Log.d("MainActivity", String.format( "onResume, %2d", Model.lock));
+		
+		SharedPreferences sharedPrefs = PreferenceManager.getDefaultSharedPreferences(this);
+		
+		TextView userName = (TextView)findViewById( R.id.UserNameText);
+		TextView userPass = (TextView)findViewById( R.id.UserPassText);
+		TextView intervalThing = (TextView)findViewById( R.id.IntervalThing);
+		userName.setText( sharedPrefs.getString( "user_name", "username"));
+		userPass.setText( sharedPrefs.getString( "user_pass", "userpass"));
+		intervalThing.setText( sharedPrefs.getString( "refresh_interval", "15"));
+		
 		//Model.forceDataUpdate();
 	}
 	

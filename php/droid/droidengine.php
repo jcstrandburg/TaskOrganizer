@@ -2,6 +2,10 @@
 
 require_once( "database.php");
 
+$dberror = "DBERROR";
+$posterror = "POSTERROR";
+$autherror = "AUTHENTICATION";
+
 function EchoSuccessResults( $results) {
 
 	$x = array();
@@ -21,8 +25,23 @@ function FailAndDie( $errorCode, $errorMessage) {
 	die();
 }
 
-$dberror = "DBERROR";
-$posterror = "POSTERROR";
+function Authenticate( $usr, $pass) {	
+global $dbconn;
+
+	$pass = md5( $pass);
+	$query = "SELECT * FROM Users WHERE UserName='$usr' AND UserPass='$pass'";
+	echo $query . "\n";
+	$result = mysqli_query( $dbconn, $query);
+	
+	if ( $row = mysqli_fetch_array( $result)) { 
+		return $row['UserID'];
+	}
+	else {
+		FailAndDie( $autherror, "Failed to authenticate");
+	}
+}
+
 $dbconn = GetDBConnection();
+
 
 ?>

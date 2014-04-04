@@ -38,6 +38,7 @@ public class TaskViewActivity extends ActionBarActivity implements OnItemClickLi
 	ArrayAdapter<String> lvAdapter;
 	int taskID;
 	Model.Task task;
+	Model.DateTime taskTime;
 	
 	View header;
 	View footer;
@@ -56,6 +57,7 @@ public class TaskViewActivity extends ActionBarActivity implements OnItemClickLi
 		if ( taskID >= 0 && (task = Model.tasks.get( taskID)) != null ) {
 			
 			Log.d("TaskView", String.format( "Loading task view for task id %d", task.id));
+			taskTime = task.getDateTime();
 			setContentView(R.layout.task_view);
 			formatView();
 			populateInterface();
@@ -114,18 +116,22 @@ public class TaskViewActivity extends ActionBarActivity implements OnItemClickLi
 		
 		taskName.setText( task.name);
 		taskDesc.setText( task.desc);
+		updateDateTimeButtons();
 	}
+	
+	public void updateDateTimeButtons() {
+		dateButton.setText( String.format( "%02d/%02d/%04d", taskTime.month+1, taskTime.day, taskTime.year));
+		timeButton.setText( String.format( "%02d:%02d", taskTime.hours, taskTime.minutes));		
+	}
+	
 	
 	public void DoSaveTask( View view) {
 		
-		Log.d("DoSaveTask",  "Getting task name");
+		task.SetWhen( taskTime);		
 		task.name = taskName.getText().toString();
-		Log.d("DoSaveTask",  "Getting task desc");		
 		task.desc = taskDesc.getText().toString();
-		Log.d("DoSaveTask",  "Calling updateTask");		
 		Model.updateTask( task);
 		
-		Log.d("DoSaveTask", "Finishing...");
 		finish();
 	}
 	
@@ -142,9 +148,12 @@ public class TaskViewActivity extends ActionBarActivity implements OnItemClickLi
 		dpick = new DatePickerDialog( this, new OnDateSetListener() {
 			public void onDateSet( DatePicker datepicker, int selectedyear, int selectedmonth, int selectedday) {
 				
-				dateButton.setText( String.format( "%02d/%02d/%04d", selectedmonth+1, selectedday, selectedyear));
+				taskTime.month = selectedmonth;
+				taskTime.day = selectedday;
+				taskTime.year = selectedyear;
+				updateDateTimeButtons();
 			}
-		}, 2014, 03, 28);
+		}, taskTime.year, taskTime.month, taskTime.day);
 		dpick.setTitle( "Hey Now");
 		dpick.show();		
 	}
@@ -156,9 +165,11 @@ public class TaskViewActivity extends ActionBarActivity implements OnItemClickLi
 		dpick = new TimePickerDialog( this, new OnTimeSetListener() {
 			public void onTimeSet( TimePicker timepicker, int selectedHour, int selectedMinutes) {
 				
-				timeButton.setText( String.format( "%02d:%02d", selectedHour, selectedMinutes));
+				taskTime.hours = selectedHour;
+				taskTime.minutes = selectedMinutes;
+				updateDateTimeButtons();
 			}
-		}, 7, 45, true);
+		}, taskTime.hours, taskTime.minutes, true);
 		dpick.setTitle( "Hey Now");
 		dpick.show();	
 	}

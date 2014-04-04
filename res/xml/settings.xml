@@ -1,0 +1,27 @@
+<?xml version="1.0" encoding="utf-8"?>
+<PreferenceScreen xmlns:android="http://schemas.android.com/apk/res/android" >
+ 
+	<EditTextPreference
+	        android:title="@string/pref_user_name"
+	        android:summary="User name"
+	        android:key="user_name"
+	/>
+	
+	<EditTextPreference
+	        android:title="@string/pref_user_name"
+	        android:summary="User Password"
+	        android:inputType="textPassword"
+	        android:key="user_pass"
+	/>
+	
+	<ListPreference
+	    	android:key="refresh_interval"
+	    	android:title="@string/pref_poll_interval"
+	    	android:summary="How often database is polled"
+	    	android:defaultValue="15"
+	    	android:entries="@array/refreshInterval"
+	    	android:entryValues="@array/refreshIntervalValues"
+	/>
+
+ 
+</PreferenceScreen>

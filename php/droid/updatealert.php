@@ -11,7 +11,7 @@ if ( isset( $_POST["AlertID"]) ) {
 	
 	mysqli_query( $dbconn, $query);
 	
-	if ( mysqli_affected_rows( $dbconn) > 0 ) {
+	if ( mysqli_affected_rows( $dbconn) >= 0 ) {
 		
 		$result = array();
 		$result["AlertID"] = $taskID;

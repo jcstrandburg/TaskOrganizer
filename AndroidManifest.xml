@@ -29,10 +29,16 @@
         <activity android:name="com.example.taskorganizer.TaskViewActivity" />
         <activity android:name="com.example.taskorganizer.AlertViewActivity" />
 
+		<activity
+            android:name="com.example.taskorganizer.SettingsActivity"
+            android:label="@string/title_activity_settings" >
+        </activity>        
+        
         <service
             android:name="com.example.taskorganizer.DatabaseService"
             android:exported="false" >
         </service>
+
     </application>
 
 </manifest>
