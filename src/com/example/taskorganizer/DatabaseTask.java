@@ -46,7 +46,7 @@ public class DatabaseTask extends AsyncTask< Model.DataHandler, Void, JSONObject
 				sb.append( line + "\n");
 			}
 			result = sb.toString();
-			Log.d("HTTPResponse", "Result: **"+result+"**");
+			//Log.d("HTTPResponse", "Result: **"+result+"**");
 			
 			
 			JSONObject jobj = new JSONObject( result);

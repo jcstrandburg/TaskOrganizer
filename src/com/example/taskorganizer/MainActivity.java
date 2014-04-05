@@ -44,7 +44,7 @@ public class MainActivity extends ActionBarActivity implements OnItemClickListen
 		ListView lv = (ListView)findViewById( R.id.TaskList);
 		lv.setAdapter( lvAdapter);		
 		lv.setOnItemClickListener( this);
-		Model.forceDataUpdate();
+		Model.scheduleUpdate( 1);
 	}
 	
 	//user clicks on an item in the task list
@@ -105,19 +105,19 @@ public class MainActivity extends ActionBarActivity implements OnItemClickListen
 	@Override
 	public void onStart() {
 		super.onStart();
-		Log.d("MainActivity", "onStart");
+		//Log.d("MainActivity", "onStart");
 	}
 	
 	@Override
 	public void onRestart() {
 		super.onRestart();
-		Log.d("MainActivity", "onRestart");
+		//Log.d("MainActivity", "onRestart");
 	}
 	
 	@Override
 	public void onResume() {
 		super.onResume();
-		Log.d("MainActivity", String.format( "onResume, %2d", Model.lock));
+		//Log.d("MainActivity", String.format( "onResume, %2d", Model.lock));
 		
 		SharedPreferences sharedPrefs = PreferenceManager.getDefaultSharedPreferences(this);
 		
@@ -128,31 +128,30 @@ public class MainActivity extends ActionBarActivity implements OnItemClickListen
 		userPass.setText( sharedPrefs.getString( "user_pass", "userpass"));
 		intervalThing.setText( sharedPrefs.getString( "refresh_interval", "15"));
 		
-		Model.forceDataUpdate();
+		//Model.scheduleUpdate( 1);
 	}
 	
 	@Override
 	public void onPause() {
 		super.onPause();
-		Log.d("MainActivity", "onPause");
+		//Log.d("MainActivity", "onPause");
 	}
 	
 	@Override
 	public void onDestroy() {
 		Model.removeListener( this);
 		super.onDestroy();
-		Log.d("MainActivity", "onDestroy");
+		//Log.d("MainActivity", "onDestroy");
 	}
 	
 	@Override
 	public void onStop() {
 		super.onStop();
-		Log.d("MainActivity", "onStop");
+		//Log.d("MainActivity", "onStop");
 	}
 
 	@Override
 	public void onDataModelUpdated() {
-		// TODO Auto-generated method stub
 		
 		dataLoaded = true;
 		listText.clear();
@@ -160,7 +159,6 @@ public class MainActivity extends ActionBarActivity implements OnItemClickListen
 			listText.add( Model.tasks.valueAt(i).name);
 		}		
 		lvAdapter.notifyDataSetChanged();
-	}
-		
+	}		
 	
 }

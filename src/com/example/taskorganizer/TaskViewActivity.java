@@ -50,13 +50,13 @@ public class TaskViewActivity extends ActionBarActivity implements OnItemClickLi
 	protected void onCreate(Bundle savedInstanceState) {
 		super.onCreate(savedInstanceState);
 		
-		Log.d("TaskViewActivity", "onCreate");
+		////Log.d("TaskViewActivity", "onCreate");
 
 		Intent intent = getIntent();
 		taskID = intent.getIntExtra( "TaskID", -1);
 		if ( taskID >= 0 && (task = Model.tasks.get( taskID)) != null ) {
 			
-			Log.d("TaskView", String.format( "Loading task view for task id %d", task.id));
+			////Log.d("TaskView", String.format( "Loading task view for task id %d", task.id));
 			taskTime = task.getDateTime();
 			setContentView(R.layout.task_view);
 			formatView();
@@ -185,7 +185,7 @@ public class TaskViewActivity extends ActionBarActivity implements OnItemClickLi
 
 		position--;
 		Model.Alert alert = task.alerts.get( position);		
-		Log.d("Alert Clicked", String.format( "%d %d", position, alert.id));
+		//Log.d("Alert Clicked", String.format( "%d %d", position, alert.id));
 		Intent intent = new Intent( this, AlertViewActivity.class);
 		intent.putExtra( "AlertID", alert.id);
 		
@@ -196,46 +196,46 @@ public class TaskViewActivity extends ActionBarActivity implements OnItemClickLi
 	@Override
 	public void onStart() {
 		super.onStart();
-		Log.d("TaskView", "onStart");
+		//Log.d("TaskView", "onStart");
 	}
 	
 	@Override
 	public void onRestart() {
 		super.onRestart();
-		Log.d("TaskView", "onRestart");
+		//Log.d("TaskView", "onRestart");
 	}
 	
 	@Override
 	public void onResume() {
 		super.onResume();
 		Model.lockData();
-		Log.d("TaskView", "onResume");
+		//Log.d("TaskView", "onResume");
 	}
 	
 	@Override
 	public void onPause() {
 		super.onPause();
 		Model.unlockData();
-		Log.d("TaskView", "onPause");
+		//Log.d("TaskView", "onPause");
 	}
 	
 	@Override
 	public void onDestroy() {
 		Model.removeListener( this);
 		super.onDestroy();
-		Log.d("TaskView", "onDestroy");
+		//Log.d("TaskView", "onDestroy");
 	}
 	
 	@Override
 	public void onStop() {
 		super.onStop();
-		Log.d("TaskView", "onStop");
+		//Log.d("TaskView", "onStop");
 	}
 
 	@Override
 	public void onDataModelUpdated() {
 
-		Log.d("TaskView", "onDataModelUpdated");
+		//Log.d("TaskView", "onDataModelUpdated");
 		task = Model.tasks.get( taskID);
 		
 		if ( task != null ) {
@@ -250,7 +250,7 @@ public class TaskViewActivity extends ActionBarActivity implements OnItemClickLi
 			populateInterface();
 		}
 		else {
-			Log.d("TaskView", String.format( "Unable to load task %d", taskID));
+			//Log.d("TaskView", String.format( "Unable to load task %d", taskID));
 		}
 	}
 			

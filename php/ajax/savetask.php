@@ -22,7 +22,7 @@ foreach ($_POST as $key=>$value) {
 $pattern = "/Offset(\d*)/";
 
 	if ( preg_match( $pattern, $key, $matches) ) {
-	$query = "UPDATE Alerts SET AlertOffset=-$value WHERE AlertID='".mysqli_real_escape_string( $dbconn, $matches[1])."'";
+	$query = "UPDATE Alerts SET AlertOffset='$value' WHERE AlertID='".mysqli_real_escape_string( $dbconn, $matches[1])."'";
 	
 		$result = mysqli_query( $dbconn, $query);		
 		echo "R: ($query)\n";

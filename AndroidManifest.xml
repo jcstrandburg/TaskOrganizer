@@ -18,6 +18,7 @@
         android:icon="@drawable/ic_launcher"
         android:label="@string/app_name"
         android:theme="@style/AppTheme" >
+        
         <activity
             android:name="com.example.taskorganizer.MainActivity"
             android:label="@string/app_name" >
@@ -27,8 +28,10 @@
                 <category android:name="android.intent.category.LAUNCHER" />
             </intent-filter>
         </activity>
+        
         <activity android:name="com.example.taskorganizer.TaskViewActivity" />
         <activity android:name="com.example.taskorganizer.AlertViewActivity" />
+        
         <activity
             android:name="com.example.taskorganizer.SettingsActivity"
             android:label="@string/title_activity_settings" >
@@ -49,6 +52,17 @@
             android:name="com.example.taskorganizer.AlarmActivity"
             android:label="@string/title_activity_test" >
         </activity>
-    </application>
 
+        <receiver
+            android:name="com.example.taskorganizer.DatabaseUpdater"
+            android:enabled="true"
+            android:exported="true" >
+            
+		    <intent-filter>
+		        <action android:name="android.intent.action.BOOT_COMPLETED"/>
+		    </intent-filter>
+		                
+        </receiver>
+        
+    </application>
 </manifest>

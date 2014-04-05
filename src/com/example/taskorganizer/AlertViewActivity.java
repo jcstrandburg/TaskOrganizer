@@ -28,13 +28,13 @@ public class AlertViewActivity extends Activity implements DataModelListener {
 	protected void onCreate(Bundle savedInstanceState) {
 		super.onCreate(savedInstanceState);
 		
-		Log.d("AlertView", "onCreate");
+		//Log.d("AlertView", "onCreate");
 		
 		Intent intent = getIntent();
 		int alertID = intent.getIntExtra( "AlertID", -1);
-		Log.d("AlertView",  String.format( "Loading alert %d", alertID));
+		//Log.d("AlertView",  String.format( "Loading alert %d", alertID));
 		alert = Model.alerts.get( alertID);
-		Log.d("AlertView",  String.format( "%d - %d", alert.id, alert.offset));
+		//Log.d("AlertView",  String.format( "%d - %d", alert.id, alert.offset));
 		
 		setContentView(R.layout.alert_view);
 		formatView();
@@ -61,7 +61,7 @@ public class AlertViewActivity extends Activity implements DataModelListener {
 		alert.offset = offsetBase*offsetMult;
 		Model.updateAlert( alert);
 		
-		Log.d("DoSaveAlert", String.format("%d, %d, %d", offsetMult, offsetBase, alert.offset));
+		//Log.d("DoSaveAlert", String.format("%d, %d, %d", offsetMult, offsetBase, alert.offset));
 		finish();
 	}	
 	
@@ -107,39 +107,39 @@ public class AlertViewActivity extends Activity implements DataModelListener {
 	@Override
 	public void onStart() {
 		super.onStart();
-		Log.d("AlertView", "onStart");
+		//Log.d("AlertView", "onStart");
 	}
 	
 	@Override
 	public void onRestart() {
 		super.onRestart();
-		Log.d("AlertView", "onRestart");
+		//Log.d("AlertView", "onRestart");
 	}
 	
 	@Override
 	public void onResume() {
 		super.onResume();
 		Model.lockData();
-		Log.d("AlertView", "onResume");
+		//Log.d("AlertView", "onResume");
 	}
 	
 	@Override
 	public void onPause() {
 		super.onPause();
 		Model.unlockData();
-		Log.d("AlertView", "onPause");
+		//Log.d("AlertView", "onPause");
 	}
 	
 	@Override
 	public void onDestroy() {
 		super.onDestroy();
-		Log.d("AlertView", "onDestroy");
+		//Log.d("AlertView", "onDestroy");
 	}
 	
 	@Override
 	public void onStop() {
 		super.onStop();
-		Log.d("AlertView", "onStop");
+		//Log.d("AlertView", "onStop");
 	}
 
 	@Override

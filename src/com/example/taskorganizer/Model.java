@@ -1,5 +1,8 @@
 package com.example.taskorganizer;
 
+import java.io.BufferedReader;
+import java.io.InputStream;
+import java.io.InputStreamReader;
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
@@ -9,10 +12,14 @@ import java.util.GregorianCalendar;
 import java.util.List;
 import java.util.Locale;
 
+import org.apache.http.HttpEntity;
+import org.apache.http.HttpResponse;
 import org.apache.http.NameValuePair;
 import org.apache.http.client.entity.UrlEncodedFormEntity;
 import org.apache.http.client.methods.HttpPost;
+import org.apache.http.impl.client.DefaultHttpClient;
 import org.apache.http.message.BasicNameValuePair;
+import org.apache.http.params.BasicHttpParams;
 import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
@@ -53,6 +60,13 @@ public class Model extends android.app.Application {
 	final static SimpleDateFormat dateFormat = new SimpleDateFormat( "yyyy-MM-dd HH:mm:ss", Locale.ENGLISH);
 	private static Context context = null;
 	
+	public static SparseArray<Task> tasks = new SparseArray<Task>();
+	public static SparseArray<Alert> alerts = new SparseArray<Alert>();
+	private static ArrayList<DataModelListener> listeners = new ArrayList<DataModelListener>();
+	private static int generation = 0;
+	public static int lock = 1;
+		
+	
 	public static class DateTime {
 		int month;
 		int year;
@@ -78,7 +92,6 @@ public class Model extends android.app.Application {
 			desc = obj.getString( "TaskDesc");
 			whenString = obj.getString( "TaskTime");
 			when = dateFormat.parse( whenString);	
-			Log.d( "DateString", when.toString());
 			generation = gen;
 			alerts = new ArrayList<Alert>();
 		}
@@ -188,30 +201,69 @@ public class Model extends android.app.Application {
 		public void handleData( DataResults obj);
 	}
 	
-	public static SparseArray<Task> tasks = new SparseArray<Task>();
-	public static SparseArray<Alert> alerts = new SparseArray<Alert>();
-	private static ArrayList<DataModelListener> listeners = new ArrayList<DataModelListener>();
-	private static int generation = 0;
-	public static int lock = 0;
-	
 	static public void SetContext( Context c) {
 		context = c;
 	}
 	
 	static public void lockData() {
-		lock++;
-		Log.d("Model", String.format( "Locking Data (%d)", lock));
+		lock--;
+		if ( lock < 0 ) {
+			Log.e("Model", String.format( "Locking Data (%d)", lock));
+		}
+		else {
+			Log.d("Model", String.format( "Locking Data (%d)", lock));
+		}
 	}
 	
 	static public void unlockData() {
-		lock--;
+		lock++;
 		Log.d("Model", String.format( "Unlocking Data (%d)", lock));
+	}
+	
+	static public void doBlockingUpdate() {
+
+		HttpPost httpPost = CreateHttpPost( dataUpdateURL, null);
+		DefaultHttpClient httpclient = new DefaultHttpClient( new BasicHttpParams());
+		InputStream inputStream = null;
+		String result = null;		
+		
+		try {
+			HttpResponse response = httpclient.execute( httpPost);
+			HttpEntity entity = response.getEntity();
+			
+			inputStream = entity.getContent();
+			BufferedReader reader = new BufferedReader( new InputStreamReader( inputStream, "UTF-8"), 8);
+			StringBuilder sb = new StringBuilder();
+			
+			String line = null;
+			while ((line = reader.readLine()) != null ) {
+				sb.append( line + "\n");
+			}
+			result = sb.toString();
+			
+			JSONObject jobj = new JSONObject( result);			
+			doDataUpdate( new DataResults( jobj));
+		}
+		catch  ( JSONException e ) {
+
+			Log.e( "JSON exception", e.getMessage());
+		}
+		catch ( Exception e) {
+			
+			Log.e( "Other exception", e.getMessage());
+			String s = e.getClass().toString();
+			Log.e( "exception", s);
+		}
+		finally {
+			
+		}
 	}
 	
 	static public void doDataUpdate( DataResults res) {
 
 		generation++;
 		try {
+			
 			if ( res.isSuccess()) {
 				
 				clearAlarms();
@@ -239,11 +291,12 @@ public class Model extends android.app.Application {
 			}
 			else {
 				Log.e( "Model",  "Data aquisition failed");
-			}
-			
+			}			
 		}
 		catch ( Exception e) {
 			Log.d( "Model", "Data update failed: "+e.getClass().toString()+", "+e.getMessage());
+		}
+		finally {
 		}
 	}
 	
@@ -258,6 +311,15 @@ public class Model extends android.app.Application {
 			PendingIntent pi = PendingIntent.getBroadcast( getAppContext(), alert.id, intent, Intent.FLAG_ACTIVITY_NEW_TASK);			
 			am.cancel( pi);
 		}
+	}
+	
+	static public void scheduleUpdate( int delay) {
+		
+		Intent intent2 = new Intent( context.getApplicationContext(), DatabaseUpdater.class);
+		Long nowTime = Calendar.getInstance().getTimeInMillis();
+		AlarmManager am = (AlarmManager)context.getSystemService( Context.ALARM_SERVICE);
+		PendingIntent pi = PendingIntent.getBroadcast( context.getApplicationContext(), 1, intent2, Intent.FLAG_ACTIVITY_NEW_TASK);
+		am.set( AlarmManager.RTC_WAKEUP, nowTime+delay, pi);			
 	}
 	
 	static private void setAlarms() {
@@ -350,11 +412,6 @@ public class Model extends android.app.Application {
 		}
 	}
 	
-	static public void forceDataUpdate() {
-
-		startDataUpdate();
-	}
-	
 	static public void addTask() {
 		
 		HttpPost httpPost = CreateHttpPost( addTaskURL, null);
@@ -424,7 +481,6 @@ public class Model extends android.app.Application {
 							@Override
 							public void handleData( DataResults res) {
 								
-								Log.d("deleteTask", "handleData");
 								try {
 									if ( res.isSuccess()) {
 										
@@ -513,7 +569,6 @@ public class Model extends android.app.Application {
 							@Override
 							public void handleData( DataResults res) {
 								
-								Log.d("deleteAlert", "handleData");
 								try {
 									if ( res.isSuccess()) {
 										
