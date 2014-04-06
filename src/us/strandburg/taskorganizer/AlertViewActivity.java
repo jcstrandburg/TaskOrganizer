@@ -86,7 +86,6 @@ public class AlertViewActivity extends ActionBarActivity {
 		int offsetBase = Integer.parseInt( offsetText.getText().toString());
 		alert.offset = offsetBase*offsetMult;
 		Model.updateAlert( alert);
-		finish();
 	}	
 	
 	public void doDeleteAlert() {

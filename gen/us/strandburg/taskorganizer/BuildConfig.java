@@ -1,5 +1,5 @@
 /** Automatically generated file. DO NOT MODIFY */
-package com.example.taskorganizer;
+package us.strandburg.taskorganizer;
 
 public final class BuildConfig {
     public final static boolean DEBUG = true;

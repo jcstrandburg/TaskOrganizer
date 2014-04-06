@@ -25,7 +25,7 @@ public class AlarmActivity extends Activity {
 			if ( alert != null) {
 				
 				TextView tv = (TextView)findViewById( R.id.AlarmLabel);
-				tv.setText( String.format( "Alarm %d for task %s", alert.id, alert.task.name));
+				tv.setText( String.format( "Alarm for task %s", alert.task.name));
 				
 				Model.deleteAlert( alert);				
 			}

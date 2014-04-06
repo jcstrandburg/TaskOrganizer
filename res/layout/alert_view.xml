@@ -44,19 +44,4 @@
 
 	</LinearLayout>
 
-	    
-	<!-- <Button
-	    android:id="@+id/SaveAlertButton"
-	    android:layout_width="fill_parent"
-	    android:layout_height="wrap_content"
-	    android:onClick="doSaveAlert"
-	    android:text="Save Alert" /> -->	 
-	    
-	<Button
-	    android:id="@+id/DeleteAlertButton"
-	    android:layout_width="fill_parent"
-	    android:layout_height="wrap_content"
-	    android:onClick="doDeleteAlert"
-	    android:text="Delete Alert" />	
-	
 </LinearLayout>	

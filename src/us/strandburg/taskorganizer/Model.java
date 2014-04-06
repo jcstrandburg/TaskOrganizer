@@ -1,8 +1,5 @@
 package us.strandburg.taskorganizer;
 
-import java.io.BufferedReader;
-import java.io.InputStream;
-import java.io.InputStreamReader;
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
@@ -13,14 +10,10 @@ import java.util.List;
 import java.util.Locale;
 import java.util.concurrent.Semaphore;
 
-import org.apache.http.HttpEntity;
-import org.apache.http.HttpResponse;
 import org.apache.http.NameValuePair;
 import org.apache.http.client.entity.UrlEncodedFormEntity;
 import org.apache.http.client.methods.HttpPost;
-import org.apache.http.impl.client.DefaultHttpClient;
 import org.apache.http.message.BasicNameValuePair;
-import org.apache.http.params.BasicHttpParams;
 import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
@@ -37,8 +30,6 @@ import android.util.SparseArray;
 /*
  * To do:
  * 
- * Individually handle alarm updates when alerts are added and deleted
- * Handle data protection on the model, not sure how to do this with different activities and junk
  * Prettify the interface
  * Figure out a better way to handle authentication
  * 
@@ -313,36 +304,41 @@ public class Model extends android.app.Application {
 		for ( int i = 0; i < alerts.size(); ++i) {
 			
 			Alert alert = alerts.valueAt( i);
-			
-			AlarmManager am = (AlarmManager)getAppContext().getSystemService( Context.ALARM_SERVICE);
-			Intent intent = new Intent( getAppContext(), AlarmActivity.class);
-			PendingIntent pi = PendingIntent.getBroadcast( getAppContext(), alert.id, intent, Intent.FLAG_ACTIVITY_NEW_TASK);			
-			am.cancel( pi);
+			clearAlarm( alert);
 		}
+	}
+	
+	static private void clearAlarm( Alert alert) {
+		AlarmManager am = (AlarmManager)getAppContext().getSystemService( Context.ALARM_SERVICE);
+		Intent intent = new Intent( getAppContext(), AlarmActivity.class);
+		PendingIntent pi = PendingIntent.getBroadcast( getAppContext(), alert.id, intent, Intent.FLAG_ACTIVITY_NEW_TASK);			
+		am.cancel( pi);
 	}
 	
 	static private void setAlarms() {
 		
-		Long nowTime = new GregorianCalendar().getTimeInMillis();
-		
 		for ( int i = 0; i < alerts.size(); ++i) {
 			
 			Alert alert = alerts.valueAt( i);
-			
-			AlarmManager am = (AlarmManager)getAppContext().getSystemService( Context.ALARM_SERVICE);
-			Intent intent = new Intent( getAppContext(), AlarmReceiver.class);
-			intent.putExtra( "AlertID", alert.id);
-			PendingIntent pi = PendingIntent.getBroadcast( getAppContext(), alert.id, intent, Intent.FLAG_ACTIVITY_NEW_TASK);
-
-			Long time = alert.task.when.getTime() - alert.offset*60000;
-
-			if ( time > nowTime) {
-				am.set( AlarmManager.RTC_WAKEUP, time, pi);
-			}
+			setAlarm( alert);
 		}
 	}
 	
-	static private void resetAlarm( Alert alert) {
+	static private void setAlarm( Alert alert) {
+		
+		AlarmManager am = (AlarmManager)getAppContext().getSystemService( Context.ALARM_SERVICE);
+		Intent intent = new Intent( getAppContext(), AlarmReceiver.class);
+		intent.putExtra( "AlertID", alert.id);
+		PendingIntent pi = PendingIntent.getBroadcast( getAppContext(), alert.id, intent, Intent.FLAG_ACTIVITY_NEW_TASK);
+		Long time = alert.task.when.getTime() - alert.offset*60000;
+		Long nowTime =Calendar.getInstance().getTimeInMillis();
+		
+		if ( time > nowTime) {
+			am.set( AlarmManager.RTC_WAKEUP, time, pi);
+		}		
+	}
+	
+	/*static private void resetAlarm( Alert alert) {
 		
 		AlarmManager am = (AlarmManager)getAppContext().getSystemService( Context.ALARM_SERVICE);
 		Intent intent = new Intent( getAppContext(), AlarmActivity.class);
@@ -351,7 +347,7 @@ public class Model extends android.app.Application {
 		Long time = alert.task.when.getTime();
 		time -= alert.offset*60000;
 		am.set( AlarmManager.RTC_WAKEUP, time, pi);
-	}
+	}*/
 	
 	static private Context getAppContext() {
 		return context.getApplicationContext();
@@ -467,7 +463,14 @@ public class Model extends android.app.Application {
 								
 								try {
 									if ( res.isSuccess()) {
-										
+
+										JSONObject taskObj = res.getResultsAsObject();
+										int taskID = taskObj.getInt( "TaskID");
+										Task task = tasks.get( taskID);
+										for ( int i = 0; i < task.alerts.size(); ++i) {
+											Alert alert = task.alerts.get( i);
+											setAlarm( alert);											
+										}
 										notifyListeners();
 									}
 									else {
@@ -532,6 +535,7 @@ public class Model extends android.app.Application {
 										Alert alert = new Alert( task, taskObj, generation);
 										task.alerts.add( alert);
 										alerts.put( alert.id, alert);
+										setAlarm( alert);
 										notifyListeners();
 									}
 								}
@@ -558,9 +562,9 @@ public class Model extends android.app.Application {
 										if ( res.isSuccess()) {
 											
 											JSONObject taskObj = res.getResultsAsObject();
-											int taskID = taskObj.getInt( "AlertID");
-											Alert alert = alerts.get( taskID);
-											resetAlarm( alert);
+											int alertID = taskObj.getInt( "AlertID");
+											Alert alert = alerts.get( alertID);
+											setAlarm( alert);
 											notifyListeners();
 										}
 										else {

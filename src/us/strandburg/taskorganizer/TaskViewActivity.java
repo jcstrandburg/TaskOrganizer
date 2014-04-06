@@ -6,20 +6,24 @@ package us.strandburg.taskorganizer;
 import java.util.ArrayList;
 import java.util.List;
 
+import android.app.Activity;
 import android.app.DatePickerDialog;
 import android.app.DatePickerDialog.OnDateSetListener;
 import android.app.TimePickerDialog;
 import android.app.TimePickerDialog.OnTimeSetListener;
+import android.content.Context;
 import android.content.Intent;
 import android.os.Bundle;
 import android.support.v7.app.ActionBarActivity;
 import android.util.Log;
 import android.view.KeyEvent;
+import android.view.LayoutInflater;
 import android.view.Menu;
 import android.view.MenuInflater;
 import android.view.MenuItem;
 import android.view.View;
 import android.view.View.OnKeyListener;
+import android.view.ViewGroup;
 import android.view.inputmethod.InputMethodManager;
 import android.widget.AdapterView;
 import android.widget.AdapterView.OnItemClickListener;
@@ -28,7 +32,46 @@ import android.widget.Button;
 import android.widget.DatePicker;
 import android.widget.EditText;
 import android.widget.ListView;
+import android.widget.TextView;
 import android.widget.TimePicker;
+
+
+class TaskListAdapter extends ArrayAdapter<Model.Task> {
+	
+	Context myContext;
+	List<Model.Task> myObjects; 
+	
+	public TaskListAdapter( Context context, int resource, List<Model.Task> objects) {
+		super(context, resource, objects);
+		myContext = context;
+		myObjects = objects;
+	}
+	
+	
+	@Override
+	public View getView( int position, View convertView, ViewGroup parent) {
+		
+		View row = convertView;
+		
+		if ( row == null ) {
+			LayoutInflater inflater = ((Activity)myContext).getLayoutInflater();
+			row = inflater.inflate( R.layout.task_list_item, parent, false);
+			
+		}
+		else {
+			
+		}
+
+		TextView taskName = (TextView)row.findViewById( R.id.TaskListItemName);
+		TextView taskTime = (TextView)row.findViewById( R.id.TaskListItemTime);
+		TextView taskAlerts = (TextView)row.findViewById( R.id.TaskListItemNumAlerts);
+		
+		Model.Task task = Model.tasks.valueAt( position);
+		taskName.setText( task.name);		
+		return row;
+	}
+}
+
 
 
 /**
@@ -99,8 +142,9 @@ public class TaskViewActivity extends ActionBarActivity implements OnItemClickLi
 		timeButton = (Button)header.findViewById(R.id.DateTimeButtonWrapper).findViewById(R.id.TimeButton);
 		taskName = (EditText)header.findViewById(R.id.TaskName);
 		taskDesc = (EditText)header.findViewById(R.id.TaskDescription);
-		lvAdapter = new ArrayAdapter<String>( this, R.layout.text_list_fragment, listText);		
-		
+		lvAdapter = new ArrayAdapter<String>( this, R.layout.text_list_fragment, listText);
+		//lvAdapter = new TaskListAdapter( this,  R.layout.text_list_fragment, Model.tasks);
+				
 		OnKeyListener okl = new OnKeyListener() {
 							    public boolean onKey(View v, int keyCode, KeyEvent event) {
 							        if (keyCode == 66) {
@@ -140,8 +184,6 @@ public class TaskViewActivity extends ActionBarActivity implements OnItemClickLi
 		task.name = taskName.getText().toString();
 		task.desc = taskDesc.getText().toString();
 		Model.updateTask( task);
-		
-		finish();
 	}
 	
 	public void doDeleteTask() {

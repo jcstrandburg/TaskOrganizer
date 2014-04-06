@@ -2,7 +2,7 @@
 <resources>
 
     <string name="app_name">TaskOrganizer</string>
-    <string name="hello_world">Hello world!</string>
+    <string name="tasks_label">Tasks:</string>
     <string name="action_settings">Settings</string>
     
     <string name="pref_user_name">User Name</string>
