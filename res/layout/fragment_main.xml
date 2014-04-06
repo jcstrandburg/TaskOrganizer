@@ -24,25 +24,26 @@
     	android:layout_height="wrap_content"        
         android:text="changeit"/>
     
+    <!-- 
     <Button 
         android:id="@+id/PreferencesButton"
     	android:layout_width="fill_parent"
     	android:layout_height="wrap_content"
-    	android:onClick="DoPreferences"
+    	android:onClick="doPreferences"
     	android:text="Preferences" />
 	
 	<Button 
         android:id="@+id/TestButton"
     	android:layout_width="fill_parent"
     	android:layout_height="wrap_content"
-    	android:onClick="DoTesting"
-    	android:text="Test" />
+    	android:onClick="doTesting"
+    	android:text="Test" /> 
 	<Button 
 		android:id="@+id/NewTaskButton"
 		android:layout_width="fill_parent"
 		android:layout_height="wrap_content"
-		android:onClick="DoNewTask"
-		android:text="New Task" />
+		android:onClick="doNewTask"
+		android:text="New Task" /> -->
     
     
     <TextView

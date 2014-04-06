@@ -4,19 +4,19 @@
     android:layout_height="match_parent"
     android:orientation="vertical" >
 
-	<Button
+	<!--  <Button
 	    android:id="@+id/SaveTaskButton"
 	    android:layout_width="fill_parent"
 	    android:layout_height="wrap_content"
-	    android:onClick="DoSaveTask"
-	    android:text="Save Task" />	 
+	    android:onClick="doSaveTask"
+	    android:text="Save Task" />	
 	    
 	<Button
 	    android:id="@+id/DeleteTaskButton"
 	    android:layout_width="fill_parent"
 	    android:layout_height="wrap_content"
-	    android:onClick="DoDeleteTask"
-	    android:text="Delete Task" />	    
+	    android:onClick="doDeleteTask"
+	    android:text="Delete Task" /> -->	    
     
 
 </LinearLayout>

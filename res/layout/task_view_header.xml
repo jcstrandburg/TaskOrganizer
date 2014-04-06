@@ -40,7 +40,7 @@
             android:text="Date"
             android:layout_weight="1"
             android:layout_width="0dp"
-            android:onClick="DoPickDate"
+            android:onClick="doPickDate"
             android:layout_height="wrap_content" />
                 
         <Button
@@ -48,17 +48,18 @@
             android:text="Time"
             android:layout_weight="1"
             android:layout_width="0dp"
-            android:onClick="DoPickTime"
+            android:onClick="doPickTime"
             android:layout_height="wrap_content" />
                 
     </LinearLayout>
 
-	<Button
+    <!--
+    <Button
 	    android:id="@+id/AddAlertButton"
 	    android:layout_width="fill_parent"
 	    android:layout_height="wrap_content"
-	    android:onClick="DoAddAlert"
-	    android:text="Add Alert" />	     
+	    android:onClick="doAddAlert"
+	    android:text="Add Alert" />	-->
     
     <TextView
         android:id="@+id/AlertLabel"

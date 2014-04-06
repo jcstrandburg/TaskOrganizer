@@ -991,39 +991,36 @@ containing a value of this type.
         public static final int abc_textfield_searchview_holo_light=0x7f020054;
         public static final int abc_textfield_searchview_right_holo_dark=0x7f020055;
         public static final int abc_textfield_searchview_right_holo_light=0x7f020056;
-        public static final int ic_launcher=0x7f020057;
+        public static final int ic_action_new=0x7f020057;
+        public static final int ic_action_refresh=0x7f020058;
+        public static final int ic_action_remove=0x7f020059;
+        public static final int ic_action_settings=0x7f02005a;
+        public static final int ic_launcher=0x7f02005b;
     }
     public static final class id {
-        public static final int AddAlertButton=0x7f06005a;
-        public static final int AlarmLabel=0x7f06004c;
-        public static final int AlertLabel=0x7f06004a;
-        public static final int AlertList=0x7f06004b;
+        public static final int AlarmLabel=0x7f06004b;
+        public static final int AlertLabel=0x7f060049;
+        public static final int AlertList=0x7f06004a;
         public static final int AlertTaskName=0x7f06003d;
         public static final int BeforeLabel=0x7f060040;
-        public static final int DateButton=0x7f060058;
-        public static final int DateTimeButtonWrapper=0x7f060057;
-        public static final int DateTimeWrapper=0x7f060047;
-        public static final int DeleteAlertButton=0x7f060042;
-        public static final int DeleteTaskButton=0x7f060056;
-        public static final int DescriptionLabel=0x7f060044;
-        public static final int HeaderString=0x7f060053;
-        public static final int IntervalThing=0x7f06004f;
-        public static final int NewTaskButton=0x7f060052;
+        public static final int DateButton=0x7f060052;
+        public static final int DateTimeButtonWrapper=0x7f060051;
+        public static final int DateTimeWrapper=0x7f060046;
+        public static final int DeleteAlertButton=0x7f060041;
+        public static final int DescriptionLabel=0x7f060043;
+        public static final int HeaderString=0x7f06004f;
+        public static final int IntervalThing=0x7f06004e;
         public static final int OffsetAmount=0x7f06003e;
         public static final int OffsetInterval=0x7f06003f;
-        public static final int PreferencesButton=0x7f060050;
-        public static final int SaveAlertButton=0x7f060041;
-        public static final int SaveTaskButton=0x7f060055;
-        public static final int TaskDate=0x7f060048;
-        public static final int TaskDescription=0x7f060045;
-        public static final int TaskList=0x7f060054;
-        public static final int TaskName=0x7f060043;
-        public static final int TaskTime=0x7f060049;
-        public static final int TestButton=0x7f060051;
-        public static final int TimeButton=0x7f060059;
-        public static final int TimeLabel=0x7f060046;
-        public static final int UserNameText=0x7f06004d;
-        public static final int UserPassText=0x7f06004e;
+        public static final int TaskDate=0x7f060047;
+        public static final int TaskDescription=0x7f060044;
+        public static final int TaskList=0x7f060050;
+        public static final int TaskName=0x7f060042;
+        public static final int TaskTime=0x7f060048;
+        public static final int TimeButton=0x7f060053;
+        public static final int TimeLabel=0x7f060045;
+        public static final int UserNameText=0x7f06004c;
+        public static final int UserPassText=0x7f06004d;
         public static final int action_bar=0x7f06001c;
         public static final int action_bar_activity_content=0x7f060015;
         public static final int action_bar_container=0x7f06001b;
@@ -1032,10 +1029,15 @@ containing a value of this type.
         public static final int action_bar_subtitle=0x7f060023;
         public static final int action_bar_title=0x7f060022;
         public static final int action_context_bar=0x7f06001d;
+        public static final int action_delete_alert=0x7f060054;
+        public static final int action_delete_task=0x7f060059;
         public static final int action_menu_divider=0x7f060016;
         public static final int action_menu_presenter=0x7f060017;
         public static final int action_mode_close_button=0x7f060024;
-        public static final int action_settings=0x7f06005b;
+        public static final int action_new_alert=0x7f060058;
+        public static final int action_new_task=0x7f060056;
+        public static final int action_refresh=0x7f060057;
+        public static final int action_settings=0x7f060055;
         public static final int activity_chooser_view_content=0x7f060025;
         public static final int always=0x7f06000b;
         public static final int beginning=0x7f060011;
@@ -1149,8 +1151,9 @@ containing a value of this type.
         public static final int text_list_fragment=0x7f030021;
     }
     public static final class menu {
-        public static final int main=0x7f0e0000;
-        public static final int test=0x7f0e0001;
+        public static final int alert_view_menu=0x7f0e0000;
+        public static final int main_menu=0x7f0e0001;
+        public static final int task_view_menu=0x7f0e0002;
     }
     public static final class string {
         /**  Content description for the action bar "home" affordance. [CHAR LIMIT=NONE] 
@@ -1193,35 +1196,40 @@ containing a value of this type.
         /**  Description of a share target (both in the list of such or the default share button) in a ShareActionProvider (share UI). [CHAR LIMIT=NONE] 
          */
         public static final int abc_shareactionprovider_share_with_application=0x7f0b000b;
+        public static final int action_delete_alert=0x7f0b0017;
+        public static final int action_delete_task=0x7f0b0016;
+        public static final int action_new_alert=0x7f0b0015;
+        public static final int action_new_task=0x7f0b0014;
+        public static final int action_refresh=0x7f0b0013;
         public static final int action_settings=0x7f0b000f;
         public static final int app_name=0x7f0b000d;
         public static final int hello_world=0x7f0b000e;
-        public static final int pref_default_display_name=0x7f0b0019;
-        public static final int pref_description_social_recommendations=0x7f0b0017;
+        public static final int pref_default_display_name=0x7f0b001e;
+        public static final int pref_description_social_recommendations=0x7f0b001c;
         /**  Example settings for Data & Sync 
          */
-        public static final int pref_header_data_sync=0x7f0b001b;
+        public static final int pref_header_data_sync=0x7f0b0020;
         /**  Strings related to Settings 
  Example General settings 
          */
-        public static final int pref_header_general=0x7f0b0015;
+        public static final int pref_header_general=0x7f0b001a;
         /**  Example settings for Notifications 
          */
-        public static final int pref_header_notifications=0x7f0b001e;
+        public static final int pref_header_notifications=0x7f0b0023;
         public static final int pref_poll_interval=0x7f0b0012;
-        public static final int pref_ringtone_silent=0x7f0b0021;
-        public static final int pref_title_add_friends_to_messages=0x7f0b001a;
-        public static final int pref_title_display_name=0x7f0b0018;
-        public static final int pref_title_new_message_notifications=0x7f0b001f;
-        public static final int pref_title_ringtone=0x7f0b0020;
-        public static final int pref_title_social_recommendations=0x7f0b0016;
-        public static final int pref_title_sync_frequency=0x7f0b001c;
-        public static final int pref_title_system_sync_settings=0x7f0b001d;
-        public static final int pref_title_vibrate=0x7f0b0022;
+        public static final int pref_ringtone_silent=0x7f0b0026;
+        public static final int pref_title_add_friends_to_messages=0x7f0b001f;
+        public static final int pref_title_display_name=0x7f0b001d;
+        public static final int pref_title_new_message_notifications=0x7f0b0024;
+        public static final int pref_title_ringtone=0x7f0b0025;
+        public static final int pref_title_social_recommendations=0x7f0b001b;
+        public static final int pref_title_sync_frequency=0x7f0b0021;
+        public static final int pref_title_system_sync_settings=0x7f0b0022;
+        public static final int pref_title_vibrate=0x7f0b0027;
         public static final int pref_user_name=0x7f0b0010;
         public static final int pref_user_pass=0x7f0b0011;
-        public static final int title_activity_settings=0x7f0b0014;
-        public static final int title_activity_test=0x7f0b0013;
+        public static final int title_activity_settings=0x7f0b0019;
+        public static final int title_activity_test=0x7f0b0018;
     }
     public static final class style {
         /** 

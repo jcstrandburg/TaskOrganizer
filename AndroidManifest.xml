@@ -18,9 +18,8 @@
         android:icon="@drawable/ic_launcher"
         android:label="@string/app_name"
         android:theme="@style/AppTheme" >
-        
         <activity
-            android:name="com.example.taskorganizer.MainActivity"
+            android:name="us.strandburg.taskorganizer.MainActivity"
             android:label="@string/app_name" >
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
@@ -28,41 +27,57 @@
                 <category android:name="android.intent.category.LAUNCHER" />
             </intent-filter>
         </activity>
-        
-        <activity android:name="com.example.taskorganizer.TaskViewActivity" />
-        <activity android:name="com.example.taskorganizer.AlertViewActivity" />
-        
+        <activity android:name="us.strandburg.taskorganizer.TaskViewActivity" />
         <activity
-            android:name="com.example.taskorganizer.SettingsActivity"
+            android:name="us.strandburg.taskorganizer.AlertViewActivity"
+            android:parentActivityName="us.strandburg.taskorganizer.TaskViewActivity" >
+            <meta-data
+                android:name="android.support.PARENT_ACTIVITY"
+                android:value="com.example.taskorganizer.TaskViewActivity" />
+        </activity>
+        <activity
+            android:name="us.strandburg.taskorganizer.SettingsActivity"
             android:label="@string/title_activity_settings" >
         </activity>
+
+        <service
+            android:name="us.strandburg.taskorganizer.DatabaseService"
+            android:exported="false" >
+        </service>
+
+        <receiver
+            android:name="us.strandburg.taskorganizer.AlarmReceiver"
+            android:enabled="true" >
+        </receiver>
+
+        <activity
+            android:name="us.strandburg.taskorganizer.AlarmActivity"
+            android:label="@string/title_activity_test" >
+        </activity>
+
+        <receiver
+            android:name="us.strandburg.taskorganizer.DatabaseUpdater"
+            android:enabled="true"
+            android:exported="true">
+            <intent-filter>
+                <action android:name="android.intent.action.BOOT_COMPLETED" />
+            </intent-filter>
+        </receiver>
 
         <service
             android:name="com.example.taskorganizer.DatabaseService"
             android:exported="false" >
         </service>
+        <service
+            android:name="us.strandburg.taskorganizer.DataUpdateService"
+            android:exported="false" >
+        </service>
 
         <receiver
-            android:name="com.example.taskorganizer.AlarmReceiver"
+            android:name="us.strandburg.taskorganizer.InterfaceUpdateReceiver"
             android:enabled="true"
-            android:exported="true" >
+            android:exported="false" >
         </receiver>
-
-        <activity
-            android:name="com.example.taskorganizer.AlarmActivity"
-            android:label="@string/title_activity_test" >
-        </activity>
-
-        <receiver
-            android:name="com.example.taskorganizer.DatabaseUpdater"
-            android:enabled="true"
-            android:exported="true" >
-            
-		    <intent-filter>
-		        <action android:name="android.intent.action.BOOT_COMPLETED"/>
-		    </intent-filter>
-		                
-        </receiver>
-        
     </application>
+
 </manifest>

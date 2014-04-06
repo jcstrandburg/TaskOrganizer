@@ -45,18 +45,18 @@
 	</LinearLayout>
 
 	    
-	<Button
+	<!-- <Button
 	    android:id="@+id/SaveAlertButton"
 	    android:layout_width="fill_parent"
 	    android:layout_height="wrap_content"
-	    android:onClick="DoSaveAlert"
-	    android:text="Save Alert" />	 
+	    android:onClick="doSaveAlert"
+	    android:text="Save Alert" /> -->	 
 	    
 	<Button
 	    android:id="@+id/DeleteAlertButton"
 	    android:layout_width="fill_parent"
 	    android:layout_height="wrap_content"
-	    android:onClick="DoDeleteAlert"
+	    android:onClick="doDeleteAlert"
 	    android:text="Delete Alert" />	
 	
 </LinearLayout>	
