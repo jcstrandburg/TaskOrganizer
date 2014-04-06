@@ -3,32 +3,30 @@
  */
 package us.strandburg.taskorganizer;
 
-import com.example.taskorganizer.R;
-
-import android.app.Activity;
 import android.content.Intent;
 import android.os.Bundle;
-import android.util.Log;
+import android.support.v7.app.ActionBarActivity;
 import android.view.Menu;
 import android.view.MenuInflater;
 import android.view.MenuItem;
-import android.view.View;
 import android.widget.ArrayAdapter;
 import android.widget.EditText;
 import android.widget.Spinner;
 import android.widget.TextView;
 
+
 /**
  * @author Justin Strandburg
  *
  */
-public class AlertViewActivity extends Activity {
+public class AlertViewActivity extends ActionBarActivity {
 
 	Model.Alert alert;
 	TextView alertLabel;
 	EditText offsetText;
 	Spinner offsetInterval;
 	ArrayAdapter<CharSequence> adapter;
+	Boolean alertDeleted = false;
 	
 	@Override
 	protected void onCreate(Bundle savedInstanceState) {
@@ -60,16 +58,16 @@ public class AlertViewActivity extends Activity {
 		int id = item.getItemId();
 		switch ( id) {
 			case R.id.action_delete_alert:
-				doDeleteAlert( null);
+				doDeleteAlert();
 				return true;
 			case R.id.action_settings:
-				doPreferences( null);
+				doPreferences();
 				return true;
 		}
 		return super.onOptionsItemSelected(item);
 	}		
 
-	public void doSaveAlert( View view) {
+	public void doSaveAlert() {
 
 		int offsetMult = 1;
 		
@@ -91,7 +89,8 @@ public class AlertViewActivity extends Activity {
 		finish();
 	}	
 	
-	public void doDeleteAlert( View view) {
+	public void doDeleteAlert() {
+		alertDeleted = true;
 		Model.deleteAlert( alert);
 		finish();
 	}
@@ -124,7 +123,7 @@ public class AlertViewActivity extends Activity {
 			offset = alert.offset;
 		}
 		
-		alertLabel.setText( String.format( "Alert: %s", alert.id, alert.task.name));
+		alertLabel.setText( String.format( "Alert: %s", alert.task.name));
 		offsetText.setText( String.format( "%d", offset));
 		offsetInterval.setSelection( interval);
 	}
@@ -132,21 +131,18 @@ public class AlertViewActivity extends Activity {
 	@Override
 	public void onResume() {
 		super.onResume();
-		try {
-			Model.acquireDataLock();
-		} catch (InterruptedException e) {
-			Log.e( "AlertViewActivity", "Interupted data lock");
-		}
+		Model.acquireDataLock();
 	}
 	
 	@Override
 	public void onPause() {
 		super.onPause();
-		doSaveAlert( null);
+		if ( !alertDeleted)
+			doSaveAlert();
 		Model.releaseDataLock();
 	}
 	
-	public void doPreferences( View view) {
+	public void doPreferences() {
 		
 		Intent intent = new Intent( this, SettingsActivity.class);
 		startActivity( intent);

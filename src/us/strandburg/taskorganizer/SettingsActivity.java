@@ -1,7 +1,5 @@
 package us.strandburg.taskorganizer;
 
-import com.example.taskorganizer.R;
-
 import android.os.Bundle;
 import android.preference.PreferenceActivity;
 import android.view.Menu;

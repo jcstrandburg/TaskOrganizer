@@ -205,25 +205,18 @@ public class Model extends android.app.Application {
 		context = c;
 	}
 	
-	static public void acquireDataLock() throws InterruptedException {
-		lock--;
-		if ( lock < 0 ) {
-			Log.e("Model", String.format( "Locking Data (%d)", lock));
-		}
-		else {
-			Log.d("Model", String.format( "Locking Data (%d)", lock));
-		}
-		dataLock.acquire();
+	static public void acquireDataLock() {
+
+		dataLock.acquireUninterruptibly();
 		Log.d("Model",  "Lock acquired");
 	}
 	
 	static public void releaseDataLock() {
-		lock++;
-		Log.d("Model", String.format( "Unlocking Data (%d)", lock));
 		dataLock.release();
+		Log.d("Model", "Lock released");
 	}
 	
-	static public void doBlockingUpdate() {
+	/*static public void doBlockingUpdate() {
 
 		HttpPost httpPost = createHttpPost( dataUpdateURL, null);
 		DefaultHttpClient httpclient = new DefaultHttpClient( new BasicHttpParams());
@@ -231,7 +224,6 @@ public class Model extends android.app.Application {
 		String result = null;		
 		
 		try {
-			Log.d( "doBlockingUpdate", "10");
 			
 			HttpResponse response = httpclient.execute( httpPost);
 			HttpEntity entity = response.getEntity();
@@ -240,23 +232,16 @@ public class Model extends android.app.Application {
 			BufferedReader reader = new BufferedReader( new InputStreamReader( inputStream, "UTF-8"), 8);
 			StringBuilder sb = new StringBuilder();
 			
-			Log.d( "doBlockingUpdate", "20");
-			
 			String line = null;
 			while ((line = reader.readLine()) != null ) {
 				sb.append( line + "\n");
 			}
 			result = sb.toString();
 			
-			
-			Log.d( "doBlockingUpdate", "30");
-			
-			Log.d("JSON result",  String.format( "** %s **", result));
+			//Log.d("JSON result",  String.format( "** %s **", result));
 			
 			JSONObject jobj = new JSONObject( result);			
 			processDataResults( new DataResults( jobj));
-			
-			Log.d( "doBlockingUpdate", "40");
 		}
 		catch  ( JSONException e ) {
 
@@ -265,13 +250,13 @@ public class Model extends android.app.Application {
 		catch ( Exception e) {
 			
 			Log.e( "Other exception", e.getMessage());
-			String s = e.getClass().toString();
-			Log.e( "exception", s);
 		}
 		finally {
-			
+			SharedPreferences sharedPrefs = PreferenceManager.getDefaultSharedPreferences( context);
+			int pollingInterval = Integer.parseInt( sharedPrefs.getString( "refresh_interval", "15"))*60000;
+			Model.scheduleUpdate( pollingInterval);			
 		}
-	}
+	}*/
 	
 	static public void processDataResults( DataResults res) {
 
@@ -301,20 +286,20 @@ public class Model extends android.app.Application {
 				}
 				
 				setAlarms();
-				notifyListeners();				
+				//notifyListeners();				
 			}
 			else {
-				Log.e( "Model",  "Data aquisition failed");
+				Log.e( "Model",  "Data update failed: " + res.getErrorMessage());
 			}			
 		}
 		catch ( Exception e) {
-			Log.d( "Model", "Data update failed: "+e.getClass().toString()+", "+e.getMessage());
+			Log.e( "Model", "Data update failed: "+e.getClass().toString()+", "+e.getMessage());
 		}
 		finally {
 		}
 	}
 	
-	static public void scheduleUpdate( int delay) {
+	static private void scheduleUpdate( int delay) {
 		
 		Intent intent2 = new Intent( context.getApplicationContext(), DatabaseUpdater.class);
 		Long nowTime = Calendar.getInstance().getTimeInMillis();
@@ -400,9 +385,10 @@ public class Model extends android.app.Application {
 	
 	static public void startDataUpdate() {
 
-		HttpPost httppost = createHttpPost( dataUpdateURL, null);
-		DatabaseTask dbtask = new DatabaseTask( httppost);
-		dbtask.execute( new DataResultHandler() {
+		Log.d( "Model.startDataUpdate", "begin");
+		HttpPost httpPost = createHttpPost( dataUpdateURL, null);
+		DatabaseTask dbTask = new DatabaseTask( httpPost, true);
+		dbTask.execute( new DataResultHandler() {
 							@Override
 							public void handleResults( DataResults res) {
 								processDataResults( res);
@@ -410,9 +396,17 @@ public class Model extends android.app.Application {
 						});
 	}
 	
+	static public void postDataUpdate() {
+		
+		//schedule the next update and notify all listeners
+		SharedPreferences sharedPrefs = PreferenceManager.getDefaultSharedPreferences( context);
+		int pollingInterval = Integer.parseInt( sharedPrefs.getString( "refresh_interval", "15"))*60000;
+		scheduleUpdate( pollingInterval);
+		notifyListeners();		
+	}
+	
 	static public void addListener( DataModelListener x) {
 		if ( !listeners.contains( x)) {
-			Log.d( "Model.addListener", String.format( "Adding listener %s", x.getClass().toString()));
 			listeners.add( x);
 		}
 	}
@@ -432,7 +426,7 @@ public class Model extends android.app.Application {
 	static public void addTask() {
 		
 		HttpPost httpPost = createHttpPost( addTaskURL, null);
-		DatabaseTask dbTask = new DatabaseTask( httpPost);
+		DatabaseTask dbTask = new DatabaseTask( httpPost, false);
 		dbTask.execute( new DataResultHandler() {
 							@Override
 							public void handleResults( DataResults res) {
@@ -465,7 +459,7 @@ public class Model extends android.app.Application {
 		postData.add( new BasicNameValuePair( "TaskTime", dateFormat.format( task.when)));
 		
 		HttpPost httpPost = createHttpPost( updateTaskURL, postData);
-		DatabaseTask dbTask = new DatabaseTask( httpPost);
+		DatabaseTask dbTask = new DatabaseTask( httpPost, false);
 		dbTask.execute( new DataResultHandler() {
 
 							@Override
@@ -492,7 +486,7 @@ public class Model extends android.app.Application {
 		List<NameValuePair> postData = new ArrayList<NameValuePair>();
 		postData.add( new BasicNameValuePair( "TaskID", String.valueOf( task.id)));		
 		HttpPost httpPost = createHttpPost( deleteTaskURL, postData);
-		DatabaseTask dbTask = new DatabaseTask( httpPost);
+		DatabaseTask dbTask = new DatabaseTask( httpPost, false);
 		dbTask.execute( new DataResultHandler() {
 
 							@Override
@@ -511,7 +505,7 @@ public class Model extends android.app.Application {
 									}
 								}
 								catch ( Exception e) {
-									Log.e( "Model.deleteTask", e.getMessage());
+									Log.e( "Model.deleteTask exception", e.getMessage());
 								}
 							}
 						});
@@ -522,7 +516,7 @@ public class Model extends android.app.Application {
 		List<NameValuePair> postData = new ArrayList<NameValuePair>();
 		postData.add( new BasicNameValuePair( "TaskID", String.valueOf( task.id)));			
 		HttpPost httpPost = createHttpPost( addAlertURL, postData);
-		DatabaseTask dbTask = new DatabaseTask( httpPost);
+		DatabaseTask dbTask = new DatabaseTask( httpPost, false);
 		dbTask.execute( new DataResultHandler() {
 
 							@Override
@@ -553,27 +547,32 @@ public class Model extends android.app.Application {
 		postData.add( new BasicNameValuePair(   "AlertID", String.valueOf( alert.id)));
 		postData.add( new BasicNameValuePair( "AlertOffset", String.valueOf( alert.offset)));
 		HttpPost httpPost = createHttpPost( updateAlertURL, postData);
-		DatabaseTask dbTask = new DatabaseTask( httpPost);
+		DatabaseTask dbTask = new DatabaseTask( httpPost, false);
 		dbTask.execute( new DataResultHandler() {
 
 							@Override
 							public void handleResults( DataResults res) {
 								
 								try {
-									if ( res.isSuccess()) {
-										
-										JSONObject taskObj = res.getResultsAsObject();
-										int taskID = taskObj.getInt( "AlertID");
-										Alert alert = alerts.get( taskID);
-										resetAlarm( alert);
-										notifyListeners();
+									if ( res != null ) {
+										if ( res.isSuccess()) {
+											
+											JSONObject taskObj = res.getResultsAsObject();
+											int taskID = taskObj.getInt( "AlertID");
+											Alert alert = alerts.get( taskID);
+											resetAlarm( alert);
+											notifyListeners();
+										}
+										else {
+											Log.e( "Model.updateAlert", "Failure: "+res.getErrorCode()+", "+res.getErrorMessage());
+										}
 									}
 									else {
-										Log.e( "Model.updateAlert", "Failure: "+res.getErrorCode()+", "+res.getErrorMessage());
+										Log.e( "Model.updateAlert", "res is null for some strange reason");
 									}
 								}
 								catch ( Exception e) {
-									Log.e( "Model.deleteTask", e.getMessage());
+									Log.e( "Model.updateAlert", e.getMessage());
 								}
 							}
 						});		
@@ -584,7 +583,7 @@ public class Model extends android.app.Application {
 		List<NameValuePair> postData = new ArrayList<NameValuePair>();
 		postData.add( new BasicNameValuePair( "AlertID", String.valueOf( alert.id)));		
 		HttpPost httpPost = createHttpPost( deleteAlertURL, postData);
-		DatabaseTask dbTask = new DatabaseTask( httpPost);
+		DatabaseTask dbTask = new DatabaseTask( httpPost, false);
 		dbTask.execute( new DataResultHandler() {
 
 							@Override

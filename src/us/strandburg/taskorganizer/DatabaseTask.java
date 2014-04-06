@@ -18,11 +18,13 @@ import android.util.Log;
 public class DatabaseTask extends AsyncTask< Model.DataResultHandler, Void, JSONObject> {
 
 	HttpPost httpPost;
+	Boolean rLock;
 	Model.DataResultHandler handler;
 	
-	public DatabaseTask( HttpPost hp) {
+	public DatabaseTask( HttpPost hp, Boolean requireLock) {
 		
 		httpPost = hp;
+		rLock = requireLock; 
 	}
 	
 	@Override
@@ -33,6 +35,10 @@ public class DatabaseTask extends AsyncTask< Model.DataResultHandler, Void, JSON
 		String result = null;		
 		handler = params[0];
 		
+		Log.d("DatabaseTask.doInBackground",  "Starting update");
+		
+		if ( rLock)
+			Model.acquireDataLock();
 		try {
 			HttpResponse response = httpclient.execute( httpPost);
 			HttpEntity entity = response.getEntity();
@@ -65,11 +71,16 @@ public class DatabaseTask extends AsyncTask< Model.DataResultHandler, Void, JSON
 			Log.e( "exception", s);
 			
 			return null;
-		}		
+		}
+		finally {
+			if ( rLock)
+				Model.releaseDataLock();
+		}
 	}
 	
 	protected void onPostExecute( JSONObject result) {
 
 		handler.handleResults( new Model.DataResults(result));
+		Model.postDataUpdate();
 	}	
 }

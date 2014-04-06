@@ -6,8 +6,6 @@ package us.strandburg.taskorganizer;
 import java.util.ArrayList;
 import java.util.List;
 
-import com.example.taskorganizer.R;
-
 import android.app.DatePickerDialog;
 import android.app.DatePickerDialog.OnDateSetListener;
 import android.app.TimePickerDialog;
@@ -46,22 +44,17 @@ public class TaskViewActivity extends ActionBarActivity implements OnItemClickLi
 	Model.DateTime taskTime;
 	
 	View header;
-	View footer;
 	EditText taskName, taskDesc;
-	
 	Button dateButton, timeButton;
 
 	@Override
 	protected void onCreate(Bundle savedInstanceState) {
 		super.onCreate(savedInstanceState);
 		
-		////Log.d("TaskViewActivity", "onCreate");
-
 		Intent intent = getIntent();
 		taskID = intent.getIntExtra( "TaskID", -1);
 		if ( taskID >= 0 && (task = Model.tasks.get( taskID)) != null ) {
 			
-			////Log.d("TaskView", String.format( "Loading task view for task id %d", task.id));
 			taskTime = task.getDateTime();
 			setContentView(R.layout.task_view);
 			formatView();
@@ -73,7 +66,12 @@ public class TaskViewActivity extends ActionBarActivity implements OnItemClickLi
 			Log.e("TaskView", "No task id provided or could not load task");
 			finish();
 		}
-		
+	}
+	
+	@Override
+	protected void onDestroy() {
+		Model.removeListener( this);
+		super.onDestroy();		
 	}
 	
 	@Override
@@ -96,9 +94,7 @@ public class TaskViewActivity extends ActionBarActivity implements OnItemClickLi
 		//get handles on important interface elements, create header and footer
 		ListView lv = (ListView)findViewById( R.id.AlertList);
 		header = getLayoutInflater().inflate( R.layout.task_view_header, null);
-		footer = getLayoutInflater().inflate( R.layout.task_view_footer, null);
 		lv.addHeaderView( header);		
-		lv.addFooterView( footer);		
 		dateButton = (Button)header.findViewById(R.id.DateTimeButtonWrapper).findViewById(R.id.DateButton);
 		timeButton = (Button)header.findViewById(R.id.DateTimeButtonWrapper).findViewById(R.id.TimeButton);
 		taskName = (EditText)header.findViewById(R.id.TaskName);
@@ -138,7 +134,7 @@ public class TaskViewActivity extends ActionBarActivity implements OnItemClickLi
 	}
 	
 	
-	public void doSaveTask( View view) {
+	public void doSaveTask() {
 		
 		task.SetWhen( taskTime);		
 		task.name = taskName.getText().toString();
@@ -148,7 +144,7 @@ public class TaskViewActivity extends ActionBarActivity implements OnItemClickLi
 		finish();
 	}
 	
-	public void doDeleteTask( View view) {
+	public void doDeleteTask() {
 		
 		Model.deleteTask( task);
 		finish();		
@@ -187,7 +183,7 @@ public class TaskViewActivity extends ActionBarActivity implements OnItemClickLi
 		dpick.show();	
 	}
 	
-	public void doAddAlert( View view) {
+	public void doAddAlert() {
 		
 		Model.addAlert( task);		
 	}
@@ -198,10 +194,8 @@ public class TaskViewActivity extends ActionBarActivity implements OnItemClickLi
 
 		position--;
 		Model.Alert alert = task.alerts.get( position);		
-		//Log.d("Alert Clicked", String.format( "%d %d", position, alert.id));
 		Intent intent = new Intent( this, AlertViewActivity.class);
 		intent.putExtra( "AlertID", alert.id);
-		
 		startActivity( intent);		
 	}
 	
@@ -213,13 +207,14 @@ public class TaskViewActivity extends ActionBarActivity implements OnItemClickLi
 		int id = item.getItemId();
 		switch ( id) {
 			case R.id.action_new_alert:
-				doAddAlert( null);
+				doAddAlert();
 				return true;
 			case R.id.action_delete_task:
-				doDeleteTask( null);
+				Log.d( "What", "who");
+				doDeleteTask();
 				return true;
 			case R.id.action_settings:
-				doPreferences( null);
+				doPreferences();
 				return true;
 		}
 		return super.onOptionsItemSelected(item);
@@ -228,17 +223,13 @@ public class TaskViewActivity extends ActionBarActivity implements OnItemClickLi
 	@Override
 	public void onResume() {
 		super.onResume();
-		try {
-			Model.acquireDataLock();
-		} catch (InterruptedException e) {
-			Log.e( "TaskViewActivity", "Interupted data lock");
-		}
+		Model.acquireDataLock();
 	}
 	
 	@Override
 	public void onPause() {
 		super.onPause();
-		doSaveTask( null);
+		doSaveTask();
 		Model.releaseDataLock();
 		Log.d("TaskView", "onPause");
 	}
@@ -265,7 +256,7 @@ public class TaskViewActivity extends ActionBarActivity implements OnItemClickLi
 		}
 	}
 	
-	public void doPreferences( View view) {
+	public void doPreferences() {
 		
 		Intent intent = new Intent( this, SettingsActivity.class);
 		startActivity( intent);

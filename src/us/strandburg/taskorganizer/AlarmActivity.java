@@ -7,7 +7,6 @@ import android.os.Bundle;
 import android.util.Log;
 import android.widget.TextView;
 
-import com.example.taskorganizer.R;
 
 
 public class AlarmActivity extends Activity {

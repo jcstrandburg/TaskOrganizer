@@ -4,8 +4,6 @@ import java.util.ArrayList;
 import java.util.GregorianCalendar;
 import java.util.List;
 
-import com.example.taskorganizer.R;
-
 import android.app.AlarmManager;
 import android.app.PendingIntent;
 import android.content.Context;
@@ -19,7 +17,6 @@ import android.view.Menu;
 import android.view.MenuInflater;
 import android.view.MenuItem;
 import android.view.View;
-import android.view.ViewConfiguration;
 import android.widget.AdapterView;
 import android.widget.AdapterView.OnItemClickListener;
 import android.widget.ArrayAdapter;
@@ -37,17 +34,24 @@ public class MainActivity extends ActionBarActivity implements OnItemClickListen
 	protected void onCreate(Bundle savedInstanceState) {
 		super.onCreate(savedInstanceState);
 		
-		Log.d("MainActivity", "onCreate");
-		
 		setContentView(R.layout.fragment_main);
 		Model.addListener( this);
 		Model.SetContext( this);
+		
+		Log.d( "What", "Why");
 		
 		listText.add( "Loading...");
 		lvAdapter = new ArrayAdapter<String>( this, R.layout.text_list_fragment, listText);
 		ListView lv = (ListView)findViewById( R.id.TaskList);
 		lv.setAdapter( lvAdapter);		
 		lv.setOnItemClickListener( this);
+		Model.startDataUpdate();		
+	}
+	
+	@Override
+	protected void onDestroy() {
+		Model.removeListener( this);
+		super.onDestroy();
 	}
 	
 	@Override
@@ -64,7 +68,6 @@ public class MainActivity extends ActionBarActivity implements OnItemClickListen
 		
 		if ( dataLoaded) {
 			Model.Task task = Model.tasks.valueAt( position);
-			Log.i( "Clicked", String.format( "You clicked item %d (%s)", position, task.name));
 			Intent intent = new Intent( this, TaskViewActivity.class);
 			intent.putExtra( "TaskID", task.id);
 					
@@ -99,36 +102,22 @@ public class MainActivity extends ActionBarActivity implements OnItemClickListen
 		// Handle action bar item clicks here. The action bar will
 		// automatically handle clicks on the Home/Up button, so long
 		// as you specify a parent activity in AndroidManifest.xml.
+		Log.d( "MainActivity", "options item selected");
 		int id = item.getItemId();
 		switch ( id) {
 			case R.id.action_new_task:
 				doNewTask( null);
 				return true;
 			case R.id.action_refresh:
-				Model.scheduleUpdate( 1);
+				//Model.startDataUpdate();
+				Model.acquireDataLock();
+				Model.releaseDataLock();
 				return true;
 			case R.id.action_settings:
 				doPreferences( null);
 				return true;
 		}
 		return super.onOptionsItemSelected(item);
-	}
-	
-	@Override
-	public void onResume() {
-		super.onResume();
-		
-		SharedPreferences sharedPrefs = PreferenceManager.getDefaultSharedPreferences(this);
-		
-		TextView userName = (TextView)findViewById( R.id.UserNameText);
-		TextView userPass = (TextView)findViewById( R.id.UserPassText);
-		TextView intervalThing = (TextView)findViewById( R.id.IntervalThing);
-		userName.setText( sharedPrefs.getString( "user_name", "username"));
-		userPass.setText( sharedPrefs.getString( "user_pass", "userpass"));
-		intervalThing.setText( sharedPrefs.getString( "refresh_interval", "15"));
-		
-		//Model.doBlockingUpdate();
-		Model.scheduleUpdate( 1);
 	}
 	
 	@Override
