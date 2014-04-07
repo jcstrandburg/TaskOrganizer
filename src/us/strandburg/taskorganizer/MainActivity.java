@@ -1,32 +1,88 @@
 package us.strandburg.taskorganizer;
 
+import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.GregorianCalendar;
 import java.util.List;
+import java.util.Locale;
 
+import android.app.Activity;
 import android.app.AlarmManager;
 import android.app.PendingIntent;
 import android.content.Context;
 import android.content.Intent;
-import android.content.SharedPreferences;
 import android.os.Bundle;
-import android.preference.PreferenceManager;
 import android.support.v7.app.ActionBarActivity;
 import android.util.Log;
+import android.view.LayoutInflater;
 import android.view.Menu;
 import android.view.MenuInflater;
 import android.view.MenuItem;
 import android.view.View;
+import android.view.ViewGroup;
 import android.widget.AdapterView;
 import android.widget.AdapterView.OnItemClickListener;
 import android.widget.ArrayAdapter;
+import android.widget.BaseAdapter;
 import android.widget.ListView;
 import android.widget.TextView;
+
+class TaskListAdapter extends BaseAdapter {
+	
+	Context myContext;
+	final static SimpleDateFormat dateFormat = new SimpleDateFormat( "MM/dd/yyyy HH:mm", Locale.ENGLISH);
+	
+	public TaskListAdapter( Context context) {
+		super();
+		myContext = context;
+	}
+	
+	@Override
+	public int getCount() {
+		return Model.tasks.size();
+	}
+	
+	
+	@Override 
+	public long getItemId( int position) {
+		return Model.tasks.valueAt( position).id;
+	}
+	
+	@Override
+	public Model.Task getItem( int position) {
+		return Model.tasks.valueAt( position);
+	}
+	
+	@Override
+	public View getView( int position, View convertView, ViewGroup parent) {
+		
+		View row = convertView;
+		
+		if ( row == null ) {
+			LayoutInflater inflater = ((Activity)myContext).getLayoutInflater();
+			row = inflater.inflate( R.layout.task_list_item, parent, false);
+			
+		}
+		else {
+			
+		}
+
+		TextView taskName = (TextView)row.findViewById( R.id.TaskListItemName);
+		TextView taskTime = (TextView)row.findViewById( R.id.TaskListItemTime);
+		TextView taskAlerts = (TextView)row.findViewById( R.id.TaskListItemNumAlerts);
+		
+		Model.Task task = Model.tasks.valueAt( position);
+		taskName.setText( task.name);		
+		taskTime.setText( dateFormat.format( task.when));
+		taskAlerts.setText( String.format( "%d alerts", task.alerts.size()));
+		return row;
+	}
+}
 
 public class MainActivity extends ActionBarActivity implements OnItemClickListener, DataModelListener {
 
 	List<String> listText = new ArrayList<String>();
-	ArrayAdapter<String> lvAdapter;
+	BaseAdapter lvAdapter;
 	Boolean dataLoaded = false;
 	
 	
@@ -41,7 +97,8 @@ public class MainActivity extends ActionBarActivity implements OnItemClickListen
 		Log.d( "What", "Why");
 		
 		listText.add( "Loading...");
-		lvAdapter = new ArrayAdapter<String>( this, R.layout.text_list_fragment, listText);
+		//lvAdapter = new ArrayAdapter<String>( this, R.layout.text_list_fragment, listText);
+		lvAdapter = new TaskListAdapter( this);
 		ListView lv = (ListView)findViewById( R.id.TaskList);
 		lv.setAdapter( lvAdapter);		
 		lv.setOnItemClickListener( this);
@@ -109,9 +166,7 @@ public class MainActivity extends ActionBarActivity implements OnItemClickListen
 				doNewTask( null);
 				return true;
 			case R.id.action_refresh:
-				//Model.startDataUpdate();
-				Model.acquireDataLock();
-				Model.releaseDataLock();
+				Model.startDataUpdate();
 				return true;
 			case R.id.action_settings:
 				doPreferences( null);

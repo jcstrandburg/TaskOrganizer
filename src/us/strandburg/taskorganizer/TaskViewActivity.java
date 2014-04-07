@@ -28,6 +28,7 @@ import android.view.inputmethod.InputMethodManager;
 import android.widget.AdapterView;
 import android.widget.AdapterView.OnItemClickListener;
 import android.widget.ArrayAdapter;
+import android.widget.BaseAdapter;
 import android.widget.Button;
 import android.widget.DatePicker;
 import android.widget.EditText;
@@ -35,18 +36,50 @@ import android.widget.ListView;
 import android.widget.TextView;
 import android.widget.TimePicker;
 
-
-class TaskListAdapter extends ArrayAdapter<Model.Task> {
+class AlertListAdapter extends BaseAdapter {
 	
 	Context myContext;
-	List<Model.Task> myObjects; 
+	Model.Task task;
 	
-	public TaskListAdapter( Context context, int resource, List<Model.Task> objects) {
-		super(context, resource, objects);
+	public AlertListAdapter( Context context, Model.Task t) {
+		super();
 		myContext = context;
-		myObjects = objects;
+		task = t;
 	}
 	
+	@Override
+	public int getCount() {
+		
+		if ( task != null ) {
+			return task.alerts.size();
+		}
+		else {
+			return 0;
+		}
+	}
+	
+	
+	@Override 
+	public long getItemId( int position) {
+		
+		if ( task != null ) {
+			return task.alerts.get( position).id;
+		}
+		else {
+			return -1;
+		}
+	}
+	
+	@Override
+	public Model.Alert getItem( int position) {
+		
+		if ( task != null ) {
+			return task.alerts.get( position);
+		}
+		else {
+			return null;
+		}
+	}
 	
 	@Override
 	public View getView( int position, View convertView, ViewGroup parent) {
@@ -55,23 +88,52 @@ class TaskListAdapter extends ArrayAdapter<Model.Task> {
 		
 		if ( row == null ) {
 			LayoutInflater inflater = ((Activity)myContext).getLayoutInflater();
-			row = inflater.inflate( R.layout.task_list_item, parent, false);
+			row = inflater.inflate( R.layout.alert_list_item, parent, false);
 			
 		}
 		else {
 			
 		}
 
-		TextView taskName = (TextView)row.findViewById( R.id.TaskListItemName);
-		TextView taskTime = (TextView)row.findViewById( R.id.TaskListItemTime);
-		TextView taskAlerts = (TextView)row.findViewById( R.id.TaskListItemNumAlerts);
+		TextView alertLabel = (TextView)row.findViewById( R.id.AlertListItemLabel);
 		
-		Model.Task task = Model.tasks.valueAt( position);
-		taskName.setText( task.name);		
+		Model.Alert alert = task.alerts.get( position);
+		
+		int offsetAmount;
+		String offsetInterval;
+		
+		if ( alert.offset % 1440 == 0 ) {
+			offsetAmount = alert.offset/1440;
+			if ( offsetAmount == 1 ) {
+				offsetInterval = "day";
+			}
+			else {
+				offsetInterval = "days";
+			}
+		}
+		else if ( alert.offset % 60 == 0 ) {
+			offsetAmount = alert.offset/60;
+			if ( offsetAmount == 1 ) {
+				offsetInterval = "hour";
+			}
+			else {
+				offsetInterval = "hours";
+			}
+		}
+		else {
+			offsetAmount = alert.offset;
+			if ( offsetAmount == 1 ) {
+				offsetInterval = "minute";
+			}
+			else {
+				offsetInterval = "minutes";
+			}
+		}
+		
+		alertLabel.setText( String.format( "Alert %d %s before", offsetAmount, offsetInterval));		
 		return row;
 	}
 }
-
 
 
 /**
@@ -81,7 +143,7 @@ class TaskListAdapter extends ArrayAdapter<Model.Task> {
 public class TaskViewActivity extends ActionBarActivity implements OnItemClickListener, DataModelListener {
 
 	List<String> listText = new ArrayList<String>();
-	ArrayAdapter<String> lvAdapter;
+	BaseAdapter lvAdapter;
 	int taskID;
 	Model.Task task;
 	Model.DateTime taskTime;
@@ -142,8 +204,8 @@ public class TaskViewActivity extends ActionBarActivity implements OnItemClickLi
 		timeButton = (Button)header.findViewById(R.id.DateTimeButtonWrapper).findViewById(R.id.TimeButton);
 		taskName = (EditText)header.findViewById(R.id.TaskName);
 		taskDesc = (EditText)header.findViewById(R.id.TaskDescription);
-		lvAdapter = new ArrayAdapter<String>( this, R.layout.text_list_fragment, listText);
-		//lvAdapter = new TaskListAdapter( this,  R.layout.text_list_fragment, Model.tasks);
+		//lvAdapter = new ArrayAdapter<String>( this, R.layout.text_list_fragment, listText);
+		lvAdapter = new AlertListAdapter( this, task);
 				
 		OnKeyListener okl = new OnKeyListener() {
 							    public boolean onKey(View v, int keyCode, KeyEvent event) {
@@ -234,6 +296,7 @@ public class TaskViewActivity extends ActionBarActivity implements OnItemClickLi
 	@Override
 	public void onItemClick(AdapterView<?> arg0, View arg1, int position, long id) {
 
+		Log.d( "TaskViewActivity.onItemClick", String.format( "Clicked on item %d (id %d)", position, id));
 		position--;
 		Model.Alert alert = task.alerts.get( position);		
 		Intent intent = new Intent( this, AlertViewActivity.class);
