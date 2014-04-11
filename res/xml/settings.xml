@@ -22,6 +22,14 @@
 	    	android:entries="@array/refreshInterval"
 	    	android:entryValues="@array/refreshIntervalValues"
 	/>
+	
+	<RingtonePreference
+	    	android:key="alarm_tone"
+	    	android:title="@string/pref_alarm_tone"
+	    	android:summary="Ringtone played for alerts"
+	    	android:showDefault="true"
+	    	android:showSilent="true" 
+	    />
 
  
 </PreferenceScreen>

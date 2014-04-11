@@ -57,6 +57,7 @@ var dat = { "TaskID": id};
 		type: "post",
 		data: dat,
 		success: function( data) {
+			alert( data);
 			var dat2 =  JSON.parse( data);
 			
 			$.ajax( {
@@ -64,6 +65,7 @@ var dat = { "TaskID": id};
 				type: "post",
 				data: dat2,
 				success: function( data2) {
+							alert( data2);
 							$("#Add"+id).before( data2);
 				},
 				error: function( data2) {
@@ -99,6 +101,7 @@ var dat = { "TaskName": $("#taskname"+id).val(), "TaskID": id, "TaskDesc": $("te
 		data: dat,
 		success: function( data) { 
 		
+			alert( data);
 			$("#Task"+id+" > h2").text( "Task: "+dat["TaskName"]);
 			$("#Task"+id+" > .TimeDisplay").html( "Occurs: "+dat["TaskTime"]);
 			ShrinkTask( id);
@@ -163,15 +166,14 @@ $(document).ready( function() {
 
 <?php
 $UserID = $_SESSION['UserID'];
-$query = "SELECT TaskName, TaskID, TaskTime FROM Tasks WHERE UserID='$UserID'";
-$result = mysqli_query( $dbconn, $query);
+$stmt = $dbconn->prepare( "SELECT TaskName, TaskID, TaskTime FROM Tasks WHERE UserID=?");
+$stmt->bind_param( "s", $UserID);
+$stmt->bind_result( $TaskName, $TaskID, $TaskTime );
+$stmt->execute();
 
 echo "<div id='Tasks'>";
 
-while ( $row=mysqli_fetch_array( $result)) {
-	$TaskID = $row['TaskID'];
-	$TaskName = $row['TaskName'];
-	$TaskTime = $row['TaskTime'];
+while ( $stmt->fetch()) {
 
 	echo "<div class=TaskContainer id=Task$TaskID>";
 	include( "ajax/viewtask.php");

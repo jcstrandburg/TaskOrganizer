@@ -5,14 +5,15 @@ import android.content.Context;
 import android.content.Intent;
 import android.util.Log;
 
+/**
+ * Broadcast receiver that starts an AlarmActivity whenever it is signaled by the AlarmManager
+ */
 public class AlarmReceiver extends BroadcastReceiver {
 	public AlarmReceiver() {
 	}
 
 	@Override
 	public void onReceive(Context context, Intent i) {
-
-		Log.d( "Yo", "Yo");
 		
 		Intent intent = new Intent( context.getApplicationContext(), AlarmActivity.class);
 		int alertID = i.getIntExtra( "AlertID", -1);

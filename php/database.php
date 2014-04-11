@@ -6,7 +6,10 @@ $dbname = "strandbu_events";
 $dbuser = "strandbu_taskorg";
 $dbpass = "~%nsiyV0.GmU";
 
-	$conn = mysqli_connect( localhost, $dbuser, $dbpass, $dbname) or die( "Could not create db connection");
+	$conn = new mysqli( localhost, $dbuser, $dbpass, $dbname);
+	if ( $conn->connect_error) {
+		die( $conn->connect_error);
+	}
 	
 	return $conn;
 }

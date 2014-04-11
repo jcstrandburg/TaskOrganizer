@@ -16,15 +16,19 @@ function Authenticate( $usr, $pass) {
 global $dbconn;
 
 	$pass = md5( $pass);
-	$query = "SELECT * FROM Users WHERE UserName='$usr' AND UserPass='$pass'";
-	$result = mysqli_query( $dbconn, $query);
+
+	$stmt = $dbconn->prepare( "SELECT UserID, UserName, Authority FROM Users WHERE UserName=? AND UserPass=?");
+	$stmt->bind_param( "ss", $usr, $pass);
+	$stmt->bind_result( $UserID, $UserName, $Authority);
+	$stmt->execute();	
 	
 	//if we get a valid result back from the db authenticate them
-	if ( $row = mysqli_fetch_array( $result))
+	if ( $stmt->fetch() )
 	{
-		$_SESSION['UserID'] = $row['UserID'];
-		$_SESSION['UserName'] = $row['UserName'];
-		$_SESSION['UserAuth'] = $row['UserAuth'];		
+		
+		$_SESSION['UserID'] = $UserID;
+		$_SESSION['UserName'] = $UserName;
+		$_SESSION['UserAuth'] = $Authority;
 		
 		return true;
 	}
@@ -32,10 +36,6 @@ global $dbconn;
 	{
 		return false;
 	}
-}
-
-function FormatDateTime( $dt) {
-	return date( "Y/m/d H:i", strtotime( $dt));
 }
 
 function DeAuthenticate() {

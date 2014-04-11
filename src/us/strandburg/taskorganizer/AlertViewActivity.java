@@ -6,9 +6,14 @@ package us.strandburg.taskorganizer;
 import android.content.Intent;
 import android.os.Bundle;
 import android.support.v7.app.ActionBarActivity;
+import android.util.Log;
+import android.view.KeyEvent;
 import android.view.Menu;
 import android.view.MenuInflater;
 import android.view.MenuItem;
+import android.view.View;
+import android.view.View.OnKeyListener;
+import android.view.inputmethod.InputMethodManager;
 import android.widget.ArrayAdapter;
 import android.widget.EditText;
 import android.widget.Spinner;
@@ -42,31 +47,42 @@ public class AlertViewActivity extends ActionBarActivity {
 	}
 	
 	
+	/**
+	 * Create the action bar options
+	 */
 	@Override
 	public boolean onCreateOptionsMenu(Menu menu) {
-	    // Inflate the menu items for use in the action bar
+
+		// Inflate the menu items for use in the action bar
 	    MenuInflater inflater = getMenuInflater();
 	    inflater.inflate(R.menu.alert_view_menu, menu);
 	    return super.onCreateOptionsMenu(menu);
 	}
 	
+	/**
+	 * Handle clicks on the action bar options
+	 */
 	@Override
 	public boolean onOptionsItemSelected(MenuItem item) {
-		// Handle action bar item clicks here. The action bar will
-		// automatically handle clicks on the Home/Up button, so long
-		// as you specify a parent activity in AndroidManifest.xml.
+
 		int id = item.getItemId();
 		switch ( id) {
 			case R.id.action_delete_alert:
-				doDeleteAlert();
+				alertDeleted = true;
+				Model.deleteAlert( alert);
+				finish();
 				return true;
 			case R.id.action_settings:
-				doPreferences();
+				Intent intent = new Intent( this, SettingsActivity.class);
+				startActivity( intent);
 				return true;
 		}
 		return super.onOptionsItemSelected(item);
 	}		
 
+	/**
+	 * Convert the alert offset information from the interface into minutes, then update the data model
+	 */
 	public void doSaveAlert() {
 
 		int offsetMult = 1;
@@ -86,12 +102,14 @@ public class AlertViewActivity extends ActionBarActivity {
 		int offsetBase = Integer.parseInt( offsetText.getText().toString());
 		alert.offset = offsetBase*offsetMult;
 		Model.updateAlert( alert);
-	}	
+	}
 	
-	public void doDeleteAlert() {
-		alertDeleted = true;
-		Model.deleteAlert( alert);
-		finish();
+	public void doForceAlarm( View view) {
+
+
+		Intent intent = new Intent( this, AlarmActivity.class);
+		intent.putExtra( "AlertID",  alert.id);
+		startActivity( intent);
 	}
 	
 	void formatView() {
@@ -100,11 +118,29 @@ public class AlertViewActivity extends ActionBarActivity {
 		offsetText = (EditText)findViewById( R.id.OffsetAmount);
 		offsetInterval = (Spinner)findViewById( R.id.OffsetInterval);
 		
+		//Create a key listener for the enter key and assign it to alert offset EditText
+		OnKeyListener okl = new OnKeyListener() {
+							    public boolean onKey(View v, int keyCode, KeyEvent event) {
+							        if (keyCode == 66) {
+							            InputMethodManager manager = (InputMethodManager) v.getContext()
+							    	            .getSystemService(INPUT_METHOD_SERVICE);
+							    	    if (manager != null)
+							    	        manager.hideSoftInputFromWindow(v.getWindowToken(), 0);
+							            return true; //this is required to stop sending key event to parent
+							        }
+							        return false;
+							    }
+							};
+		offsetText.setOnKeyListener( okl);
+		
 		adapter = ArrayAdapter.createFromResource( this, R.array.interval_arrays, android.R.layout.simple_spinner_item);
 		adapter.setDropDownViewResource( android.R.layout.simple_spinner_dropdown_item);
 		offsetInterval.setAdapter( adapter);
-	}
+	}	
 	
+	/**
+	 * Uses information from the data model to populate interface items
+	 */
 	void populateInterface() {
 		
 		int offset, interval;
@@ -140,10 +176,4 @@ public class AlertViewActivity extends ActionBarActivity {
 			doSaveAlert();
 		Model.releaseDataLock();
 	}
-	
-	public void doPreferences() {
-		
-		Intent intent = new Intent( this, SettingsActivity.class);
-		startActivity( intent);
-	}		
 }

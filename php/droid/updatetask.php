@@ -13,7 +13,7 @@ if ( isset( $_POST["TaskID"]) ) {
 	
 	mysqli_query( $dbconn, $query);
 	
-	if ( mysqli_affected_rows( $dbconn) >= 0 ) {
+	if ( mysqli_affected_rows( $dbconn) > 0 ) {
 		
 		$result = array();
 		$result["TaskID"] = $taskID;

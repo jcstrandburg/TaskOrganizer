@@ -1,5 +1,11 @@
 <?php
 
+if ( !function_exists( FormatDateTime) ) {
+	function FormatDateTime( $dt) {
+		return date( "Y/m/d H:i", strtotime( $dt));
+	}
+}
+
 if ( !isset( $TaskID)) {
 	extract( $_POST);
 }

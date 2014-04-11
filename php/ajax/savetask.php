@@ -6,26 +6,24 @@ if ( isset( $_POST['TaskDesc'])) {
 	$TaskID = $_POST['TaskID'];
 	$TaskDesc = $_POST['TaskDesc'];
 	$TaskTime = $_POST['TaskTime'];
-
-	$query = "UPDATE Tasks SET TaskName='".$TaskName."', TaskDesc='".$TaskDesc.
-			"', TaskTime='".$TaskTime."' WHERE TaskID='".$TaskID."' AND UserID='".
-			$_SESSION['UserID']."'";
-	mysqli_query( $dbconn, $query);
+	
+	$stmt = $dbconn->prepare( "UPDATE Tasks SET TaskName=?, TaskDesc=?, TaskTime=? WHERE TaskID=? AND UserID=?");
+	$stmt->bind_param( "sssss", $TaskName, $TaskDesc, $TaskTime, $TaskID, $_SESSION['UserID']);
+	$stmt->execute();
+	$stmt->close();
 }
 else {
 	header('HTTP/1.1 500 Internal Server Error (Missing POST Data)');
 }
 
-echo( "Q: ($query)\n");
-
+$stmt = $dbconn->prepare( "UPDATE Alerts SET AlertOffset=? WHERE AlertID=?");
 foreach ($_POST as $key=>$value) {
 $pattern = "/Offset(\d*)/";
 
 	if ( preg_match( $pattern, $key, $matches) ) {
-	$query = "UPDATE Alerts SET AlertOffset='$value' WHERE AlertID='".mysqli_real_escape_string( $dbconn, $matches[1])."'";
 	
-		$result = mysqli_query( $dbconn, $query);		
-		echo "R: ($query)\n";
+		$stmt->bind_param( "ss", $value, $matches[1]);
+		$stmt->execute();
 	}	
 }
 ?>

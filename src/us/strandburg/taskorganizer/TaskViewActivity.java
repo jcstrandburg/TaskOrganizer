@@ -8,6 +8,7 @@ import java.util.List;
 
 import android.app.Activity;
 import android.app.DatePickerDialog;
+import android.app.ProgressDialog;
 import android.app.DatePickerDialog.OnDateSetListener;
 import android.app.TimePickerDialog;
 import android.app.TimePickerDialog.OnTimeSetListener;
@@ -35,7 +36,11 @@ import android.widget.EditText;
 import android.widget.ListView;
 import android.widget.TextView;
 import android.widget.TimePicker;
+import android.widget.Toast;
 
+/**
+ * AlertListAdapater - Customized adapter that provides views to the alert list 
+ */
 class AlertListAdapter extends BaseAdapter {
 	
 	Context myContext;
@@ -84,24 +89,17 @@ class AlertListAdapter extends BaseAdapter {
 	@Override
 	public View getView( int position, View convertView, ViewGroup parent) {
 		
-		View row = convertView;
 		
-		if ( row == null ) {
+		if ( convertView == null ) {
 			LayoutInflater inflater = ((Activity)myContext).getLayoutInflater();
-			row = inflater.inflate( R.layout.alert_list_item, parent, false);
-			
-		}
-		else {
-			
+			convertView = inflater.inflate( R.layout.alert_list_item, parent, false);			
 		}
 
-		TextView alertLabel = (TextView)row.findViewById( R.id.AlertListItemLabel);
-		
-		Model.Alert alert = task.alerts.get( position);
-		
+		Model.Alert alert = task.alerts.get( position);		
 		int offsetAmount;
 		String offsetInterval;
 		
+		//convert the alert offset to minute/hour/day interval notation
 		if ( alert.offset % 1440 == 0 ) {
 			offsetAmount = alert.offset/1440;
 			if ( offsetAmount == 1 ) {
@@ -130,24 +128,20 @@ class AlertListAdapter extends BaseAdapter {
 			}
 		}
 		
+		TextView alertLabel = (TextView)convertView.findViewById( R.id.AlertListItemLabel);				
 		alertLabel.setText( String.format( "Alert %d %s before", offsetAmount, offsetInterval));		
-		return row;
+		return convertView;
 	}
 }
 
 
-/**
- * @author Justin Strandburg
- *
- */
-public class TaskViewActivity extends ActionBarActivity implements OnItemClickListener, DataModelListener {
+public class TaskViewActivity extends ActionBarActivity implements OnItemClickListener, Model.DataModelListener {
 
 	List<String> listText = new ArrayList<String>();
 	BaseAdapter lvAdapter;
 	int taskID;
 	Model.Task task;
-	Model.DateTime taskTime;
-	
+	Model.DateTime taskTime;	
 	View header;
 	EditText taskName, taskDesc;
 	Button dateButton, timeButton;
@@ -179,6 +173,9 @@ public class TaskViewActivity extends ActionBarActivity implements OnItemClickLi
 		super.onDestroy();		
 	}
 	
+	/**
+	 * Create the action bar options
+	 */
 	@Override
 	public boolean onCreateOptionsMenu(Menu menu) {
 	    // Inflate the menu items for use in the action bar
@@ -187,16 +184,9 @@ public class TaskViewActivity extends ActionBarActivity implements OnItemClickLi
 	    return super.onCreateOptionsMenu(menu);
 	}	
 	
-	private void hideKeyboard(View view) {
-	    InputMethodManager manager = (InputMethodManager) view.getContext()
-	            .getSystemService(INPUT_METHOD_SERVICE);
-	    if (manager != null)
-	        manager.hideSoftInputFromWindow(view.getWindowToken(), 0);
-	}
-	
 	void formatView() {
 		
-		//get handles on important interface elements, create header and footer
+		//get handles on important interface elements, create header
 		ListView lv = (ListView)findViewById( R.id.AlertList);
 		header = getLayoutInflater().inflate( R.layout.task_view_header, null);
 		lv.addHeaderView( header);		
@@ -204,13 +194,20 @@ public class TaskViewActivity extends ActionBarActivity implements OnItemClickLi
 		timeButton = (Button)header.findViewById(R.id.DateTimeButtonWrapper).findViewById(R.id.TimeButton);
 		taskName = (EditText)header.findViewById(R.id.TaskName);
 		taskDesc = (EditText)header.findViewById(R.id.TaskDescription);
-		//lvAdapter = new ArrayAdapter<String>( this, R.layout.text_list_fragment, listText);
+		
+		//set up the list adapter
 		lvAdapter = new AlertListAdapter( this, task);
-				
+		lv.setAdapter( lvAdapter);	
+		lv.setOnItemClickListener( this);		
+		
+		//Create a key listener for the enter key and assign it to the task name and task description EditText's
 		OnKeyListener okl = new OnKeyListener() {
 							    public boolean onKey(View v, int keyCode, KeyEvent event) {
 							        if (keyCode == 66) {
-							            hideKeyboard(v);
+							            InputMethodManager manager = (InputMethodManager) v.getContext()
+							    	            .getSystemService(INPUT_METHOD_SERVICE);
+							    	    if (manager != null)
+							    	        manager.hideSoftInputFromWindow(v.getWindowToken(), 0);
 							            return true; //this is required to stop sending key event to parent
 							        }
 							        return false;
@@ -219,14 +216,13 @@ public class TaskViewActivity extends ActionBarActivity implements OnItemClickLi
 		taskName.setOnKeyListener( okl);
 		taskDesc.setOnKeyListener( okl);
 		
-		//create the list adapter and set it up and junk
-		lv.setAdapter( lvAdapter);	
-		lv.setOnItemClickListener( this);		
-
 		//force load the correct information from the data model
 		onDataModelUpdated();		
 	}
 	
+	/**
+	 * Pulls information from the data model and puts it into the appropriate interface elements
+	 */
 	public void populateInterface() {
 		
 		taskName.setText( task.name);
@@ -234,26 +230,17 @@ public class TaskViewActivity extends ActionBarActivity implements OnItemClickLi
 		updateDateTimeButtons();
 	}
 	
+	/**
+	 * Uses the date time information from the task to set the text on the date and time buttons
+	*/
 	public void updateDateTimeButtons() {
 		dateButton.setText( String.format( "%02d/%02d/%04d", taskTime.month+1, taskTime.day, taskTime.year));
-		timeButton.setText( String.format( "%02d:%02d", taskTime.hours, taskTime.minutes));		
+		timeButton.setText( String.format( "%02d:%02d", taskTime.hours, taskTime.minutes));
 	}
 	
-	
-	public void doSaveTask() {
-		
-		task.SetWhen( taskTime);		
-		task.name = taskName.getText().toString();
-		task.desc = taskDesc.getText().toString();
-		Model.updateTask( task);
-	}
-	
-	public void doDeleteTask() {
-		
-		Model.deleteTask( task);
-		finish();		
-	}
-	
+	/**
+	 * Pop up a date picker dialog in response to clicks on the date button
+	 */
 	public void doPickDate( View view) {
 
 		DatePickerDialog dpick;
@@ -271,6 +258,9 @@ public class TaskViewActivity extends ActionBarActivity implements OnItemClickLi
 		dpick.show();		
 	}
 	
+	/**
+	 * Pop up a time picker dialog in response to clicks on the time button
+	 */
 	public void doPickTime( View view) {
 
 		TimePickerDialog dpick;
@@ -287,12 +277,9 @@ public class TaskViewActivity extends ActionBarActivity implements OnItemClickLi
 		dpick.show();	
 	}
 	
-	public void doAddAlert() {
-		
-		Model.addAlert( task);		
-	}
-
-	//FOr when user clicks on alert list
+	/**
+	 * Handle clicks on the alert list
+	 */
 	@Override
 	public void onItemClick(AdapterView<?> arg0, View arg1, int position, long id) {
 
@@ -304,22 +291,24 @@ public class TaskViewActivity extends ActionBarActivity implements OnItemClickLi
 		startActivity( intent);		
 	}
 	
+	/**
+	 * Handle clicks on the action bar options
+	 */
 	@Override
 	public boolean onOptionsItemSelected(MenuItem item) {
-		// Handle action bar item clicks here. The action bar will
-		// automatically handle clicks on the Home/Up button, so long
-		// as you specify a parent activity in AndroidManifest.xml.
+
 		int id = item.getItemId();
 		switch ( id) {
 			case R.id.action_new_alert:
-				doAddAlert();
+				Model.addAlert( task);		
 				return true;
 			case R.id.action_delete_task:
-				Log.d( "What", "who");
-				doDeleteTask();
+				Model.deleteTask( task);
+				finish();	
 				return true;
 			case R.id.action_settings:
-				doPreferences();
+				Intent intent = new Intent( this, SettingsActivity.class);
+				startActivity( intent);
 				return true;
 		}
 		return super.onOptionsItemSelected(item);
@@ -334,37 +323,32 @@ public class TaskViewActivity extends ActionBarActivity implements OnItemClickLi
 	@Override
 	public void onPause() {
 		super.onPause();
-		doSaveTask();
+
+		//update the task, release the lock on the model
+		task.SetWhen( taskTime);		
+		task.name = taskName.getText().toString();
+		task.desc = taskDesc.getText().toString();
+		Model.updateTask( task);
 		Model.releaseDataLock();
-		Log.d("TaskView", "onPause");
 	}
 
+	/**
+	 * Handle updates to the data model
+	 */
 	@Override
 	public void onDataModelUpdated() {
 
-		//Log.d("TaskView", "onDataModelUpdated");
 		task = Model.tasks.get( taskID);
 		
 		if ( task != null ) {
 			
-			listText.clear();
-			for ( int i = 0; i < task.alerts.size(); i++) {
-				Model.Alert alert = task.alerts.get( i);
-				String s = String.format( "Alert %d (%d)", alert.id, alert.offset);			
-				listText.add( s);
-			}		
 			lvAdapter.notifyDataSetChanged();
 			populateInterface();
 		}
 		else {
-			//Log.d("TaskView", String.format( "Unable to load task %d", taskID));
+			Log.e("TaskView", String.format( "Unable to load task %d", taskID));
+			finish();
 		}
 	}
 	
-	public void doPreferences() {
-		
-		Intent intent = new Intent( this, SettingsActivity.class);
-		startActivity( intent);
-	}	
-			
 }

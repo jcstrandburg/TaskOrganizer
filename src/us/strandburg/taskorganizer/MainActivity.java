@@ -27,6 +27,9 @@ import android.widget.BaseAdapter;
 import android.widget.ListView;
 import android.widget.TextView;
 
+/**
+ * TaskListAdapter - A customized adapter to provide views of tasks to the task list
+ */
 class TaskListAdapter extends BaseAdapter {
 	
 	Context myContext;
@@ -39,13 +42,21 @@ class TaskListAdapter extends BaseAdapter {
 	
 	@Override
 	public int getCount() {
-		return Model.tasks.size();
+
+		if ( Model.authenticated)
+			return Model.tasks.size();
+		else
+			return 1;
 	}
-	
 	
 	@Override 
 	public long getItemId( int position) {
-		return Model.tasks.valueAt( position).id;
+		if ( Model.authenticated) {
+			return Model.tasks.valueAt( position).id;
+		}
+		else {
+			return -1;
+		}
 	}
 	
 	@Override
@@ -71,15 +82,25 @@ class TaskListAdapter extends BaseAdapter {
 		TextView taskTime = (TextView)row.findViewById( R.id.TaskListItemTime);
 		TextView taskAlerts = (TextView)row.findViewById( R.id.TaskListItemNumAlerts);
 		
-		Model.Task task = Model.tasks.valueAt( position);
-		taskName.setText( task.name);		
-		taskTime.setText( dateFormat.format( task.when));
-		taskAlerts.setText( String.format( "%d alerts", task.alerts.size()));
+		if ( Model.authenticated) {
+			Model.Task task = Model.tasks.valueAt( position);		
+			if ( task != null) {
+				taskName.setText( task.name);		
+				taskTime.setText( dateFormat.format( task.when));
+				taskAlerts.setText( String.format( "%d alerts", task.alerts.size()));
+			}
+		}
+		else {
+			taskName.setText( "Could not authenticate");
+			taskTime.setText( "Please check your credentials in the settings");
+			taskAlerts.setText( "...");
+		}
+		
 		return row;
 	}
 }
 
-public class MainActivity extends ActionBarActivity implements OnItemClickListener, DataModelListener {
+public class MainActivity extends ActionBarActivity implements OnItemClickListener, Model.DataModelListener {
 
 	List<String> listText = new ArrayList<String>();
 	BaseAdapter lvAdapter;
@@ -90,19 +111,20 @@ public class MainActivity extends ActionBarActivity implements OnItemClickListen
 	protected void onCreate(Bundle savedInstanceState) {
 		super.onCreate(savedInstanceState);
 		
-		setContentView(R.layout.fragment_main);
+		setContentView(R.layout.main_view);
 		Model.addListener( this);
 		Model.SetContext( this);
 		
-		Log.d( "What", "Why");
-		
-		listText.add( "Loading...");
-		//lvAdapter = new ArrayAdapter<String>( this, R.layout.text_list_fragment, listText);
 		lvAdapter = new TaskListAdapter( this);
 		ListView lv = (ListView)findViewById( R.id.TaskList);
 		lv.setAdapter( lvAdapter);		
 		lv.setOnItemClickListener( this);
-		Model.startDataUpdate();		
+	}
+	
+	@Override
+	protected void onResume() {
+		super.onResume();
+		Model.startDataUpdate();
 	}
 	
 	@Override
@@ -111,6 +133,9 @@ public class MainActivity extends ActionBarActivity implements OnItemClickListen
 		super.onDestroy();
 	}
 	
+	/**
+	 * Create the action bar options
+	 */
 	@Override
 	public boolean onCreateOptionsMenu(Menu menu) {
 
@@ -120,10 +145,12 @@ public class MainActivity extends ActionBarActivity implements OnItemClickListen
 	    return super.onCreateOptionsMenu(menu);
 	}
 	
-	//user clicks on an item in the task list
+	/**
+	 * Handle clicks on the task list
+	*/
 	public void onItemClick( AdapterView<?> l, View v, int position, long id) {
 		
-		if ( dataLoaded) {
+		if ( dataLoaded && Model.authenticated) {
 			Model.Task task = Model.tasks.valueAt( position);
 			Intent intent = new Intent( this, TaskViewActivity.class);
 			intent.putExtra( "TaskID", task.id);
@@ -132,49 +159,32 @@ public class MainActivity extends ActionBarActivity implements OnItemClickListen
 		}
 	}
 	
-	public void doTesting( View view) {
-
-		Long time = new GregorianCalendar().getTimeInMillis();
-		time += 1000;
-		
-		Intent intentAlarm = new Intent( this.getApplicationContext(), AlarmReceiver.class);
-		AlarmManager alarmManager = (AlarmManager)getSystemService( Context.ALARM_SERVICE);
-		
-		alarmManager.set( AlarmManager.RTC_WAKEUP, time-1, 
-				PendingIntent.getBroadcast( this,  1,  intentAlarm,  PendingIntent.FLAG_UPDATE_CURRENT));
-	}
-	
-	public void doPreferences( View view) {
-		
-		Intent intent = new Intent( this, SettingsActivity.class);
-		startActivity( intent);
-	}
-	
-	public void doNewTask( View view) {
-		Model.addTask();
-	}
-	
+	/**
+	 * Handle action bar item clicks
+	 */
 	@Override
 	public boolean onOptionsItemSelected(MenuItem item) {
-		// Handle action bar item clicks here. The action bar will
-		// automatically handle clicks on the Home/Up button, so long
-		// as you specify a parent activity in AndroidManifest.xml.
+
 		Log.d( "MainActivity", "options item selected");
 		int id = item.getItemId();
 		switch ( id) {
 			case R.id.action_new_task:
-				doNewTask( null);
+				Model.addTask();
 				return true;
 			case R.id.action_refresh:
 				Model.startDataUpdate();
 				return true;
 			case R.id.action_settings:
-				doPreferences( null);
+				Intent intent = new Intent( this, SettingsActivity.class);
+				startActivity( intent);
 				return true;
 		}
 		return super.onOptionsItemSelected(item);
 	}
 	
+	/**
+	 * Respond to changes in the data model 
+	 */
 	@Override
 	public void onDataModelUpdated() {
 		
