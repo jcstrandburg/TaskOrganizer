@@ -7,11 +7,10 @@ if ( isset( $_POST["AlertID"]) ) {
 	$alertID = $_POST["AlertID"];
 	$alertOffset = $_POST["AlertOffset"];
 	
-	$query = "UPDATE Alerts SET AlertOffset='$alertOffset' WHERE AlertID='$alertID'";
+	$stmt = $dbconn->prepare( "UPDATE Alerts SET AlertOffset=? WHERE AlertID=?");
+	$stmt->bind_param( "ss", $alertOffset, $alertID);
 	
-	mysqli_query( $dbconn, $query);
-	
-	if ( mysqli_affected_rows( $dbconn) > 0 ) {
+	if ( $stmt->execute()) {
 		
 		$result = array();
 		$result["AlertID"] = $alertID;

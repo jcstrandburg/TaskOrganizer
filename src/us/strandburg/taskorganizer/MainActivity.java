@@ -119,12 +119,16 @@ public class MainActivity extends ActionBarActivity implements OnItemClickListen
 		ListView lv = (ListView)findViewById( R.id.TaskList);
 		lv.setAdapter( lvAdapter);		
 		lv.setOnItemClickListener( this);
+		Model.startDataUpdate();
 	}
 	
 	@Override
 	protected void onResume() {
 		super.onResume();
-		Model.startDataUpdate();
+		if ( Model.credentialsChanged) {
+			Model.startDataUpdate();
+			Model.credentialsChanged = false;
+		}
 	}
 	
 	@Override

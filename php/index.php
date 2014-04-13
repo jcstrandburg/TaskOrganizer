@@ -17,7 +17,6 @@ function DeleteAlert( id) {
 		data: {"AlertID": id},
 		type: "post",
 		success: function( data) {
-			alert( data);		
 			$("#Alert"+id).remove();
 		},
 		error: function( data) { 
@@ -57,7 +56,6 @@ var dat = { "TaskID": id};
 		type: "post",
 		data: dat,
 		success: function( data) {
-			alert( data);
 			var dat2 =  JSON.parse( data);
 			
 			$.ajax( {
@@ -65,7 +63,6 @@ var dat = { "TaskID": id};
 				type: "post",
 				data: dat2,
 				success: function( data2) {
-							alert( data2);
 							$("#Add"+id).before( data2);
 				},
 				error: function( data2) {
@@ -101,7 +98,6 @@ var dat = { "TaskName": $("#taskname"+id).val(), "TaskID": id, "TaskDesc": $("te
 		data: dat,
 		success: function( data) { 
 		
-			alert( data);
 			$("#Task"+id+" > h2").text( "Task: "+dat["TaskName"]);
 			$("#Task"+id+" > .TimeDisplay").html( "Occurs: "+dat["TaskTime"]);
 			ShrinkTask( id);
@@ -122,7 +118,6 @@ function DeleteTask( id) {
 		type: "post",
 		data: {"TaskID": id},
 		success: function( data) {
-			alert( data);
 			$('#Task'+id).remove();			
 		},
 		error: function( data) {

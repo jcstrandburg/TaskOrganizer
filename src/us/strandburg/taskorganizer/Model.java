@@ -51,14 +51,14 @@ public class Model extends android.app.Application {
 	private static final String authenticationURL = baseURL + "auth.php";
 	
 	private static final Semaphore dataLock = new Semaphore( 1);//used for locking data model from concurrent access
-	
 	final static SimpleDateFormat dateFormat = new SimpleDateFormat( "yyyy-MM-dd HH:mm:ss", Locale.ENGLISH);
 	private static Context context = null;
+	private static ArrayList<DataModelListener> listeners = new ArrayList<DataModelListener>();	
 	
 	public static SparseArray<Task> tasks = new SparseArray<Task>();
 	public static SparseArray<Alert> alerts = new SparseArray<Alert>();
 	public static Boolean authenticated = false;
-	private static ArrayList<DataModelListener> listeners = new ArrayList<DataModelListener>();
+	public static Boolean credentialsChanged = false;
 	
 	/**
 	 * Interface for objects requiring notification from the data model on updates
@@ -585,10 +585,10 @@ public class Model extends android.app.Application {
 								try {
 									if ( res.isSuccess()) {
 										
-										JSONObject taskObj = res.getResultsAsObject();
-										int taskID = taskObj.getInt( "TaskID");
+										JSONObject alertObj = res.getResultsAsObject();
+										int taskID = alertObj.getInt( "TaskID");
 										Task task = tasks.get( taskID);
-										Alert alert = new Alert( task, taskObj);
+										Alert alert = new Alert( task, alertObj);
 										task.alerts.add( alert);
 										alerts.put( alert.id, alert);
 										notifyListeners();

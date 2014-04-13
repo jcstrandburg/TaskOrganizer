@@ -29,11 +29,14 @@ function Authenticate( $usr, $pass) {
 global $dbconn;
 
 	$pass = md5( $pass);
-	$query = "SELECT * FROM Users WHERE UserName='$usr' AND UserPass='$pass'";
-	$result = mysqli_query( $dbconn, $query);
 	
-	if ( $row = mysqli_fetch_array( $result)) { 
-		return $row['UserID'];
+	$stmt = $dbconn->prepare( "SELECT UserID FROM Users WHERE UserName=? AND UserPass=?");
+	$stmt->bind_param( "ss", $usr, $pass);
+	$stmt->execute();
+	$stmt->bind_result( $UserID);
+	
+	if ( $stmt->fetch()) {
+		return $UserID;
 	}
 	else {
 		FailAndDie( $autherror, "Failed to authenticate");

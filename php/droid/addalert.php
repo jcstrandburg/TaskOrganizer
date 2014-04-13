@@ -6,13 +6,21 @@ if ( isset( $_POST["TaskID"]) ) {
 
 	$taskID = $_POST["TaskID"];
 
-	$query = "INSERT INTO Alerts (TaskID, AlertOffset) VALUES ('$taskID', '0')";
-	mysqli_query( $dbconn, $query);
+
+	$stmt = $dbconn->prepare( "INSERT INTO Alerts (TaskID, AlertOffset) Values (?, '0')");
+	$stmt->bind_param( "s", $taskID);
+	$stmt->execute();
+	$stmt->close();
 
 	$id = mysqli_insert_id( $dbconn);
-	$query = "SELECT * FROM Alerts WHERE AlertID='$id'";
-	$results = mysqli_query( $dbconn, $query) or FailAndDie( $dberror, "failed to select inserted task");
-	$r = mysqli_fetch_assoc( $results);
+	
+	$stmt = $dbconn->prepare( "SELECT AlertID, TaskID, AlertOffset FROM Alerts WHERE AlertID=?");
+	$stmt->bind_param( "s", $id);
+	$stmt->execute();
+	$r = array();
+	$stmt->bind_result( $r["AlertID"], $r["TaskID"], $r["AlertOffset"]);
+	$stmt->fetch();
+	
 	EchoSuccessResults( $r);
 }
 else {

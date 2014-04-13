@@ -5,17 +5,15 @@ require_once( "droidengine.php");
 if ( isset( $_POST["AlertID"]) ) {
 	
 	$alertID = $_POST["AlertID"];
-	$query = "DELETE FROM Alerts WHERE AlertID='$alertID'";
-	mysqli_query( $dbconn, $query);
-	
-	if ( mysqli_affected_rows( $dbconn) > 0 ) {
-		
+	$stmt = $dbconn->prepare( "DELETE FROM Alerts WHERE AlertID=?");
+	$stmt->bind_param( "s", $alertID);
+	if ( $stmt->execute()) {
 		$result = array();
 		$result["AlertID"] = $alertID;
 		EchoSuccessResults( $result);
 	}
 	else {
-		FailAndDie( $dberror, "Failed to delete alert");
+		FailAndDie( $dberror, "Failed to delete alert");	
 	}
 }
 else {

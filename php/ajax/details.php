@@ -2,28 +2,32 @@
 require_once( "../engine.php");
 
 if ( isset( $_GET['TaskID'])) {
-	$id = mysqli_real_escape_string( $dbconn, $_GET['TaskID']);
+	$id = $_GET['TaskID'];
 
-	$query = "SELECT * FROM Tasks WHERE TaskID='$id' AND UserID='".$_SESSION['UserID']."'";
-	$result = mysqli_query( $dbconn, $query);
-	
-	if ( $row = mysqli_fetch_array( $result)) {
-			
-		echo "Task name: <input id='taskname".$row['TaskID']."' type='text' value='".$row['TaskName']."'><br>";
-		echo "Task time: <input class='datetimepicker' id='datetimepicker".$row['TaskID']."' type='text' value='".FormatDateTime( $row['TaskTime'])."'><br>";
-		echo "Description:<br><textarea id=Desc$id>".$row['TaskDesc']."</textarea><br>";
-		echo "<input type=hidden id=Time$TaskID value='".$row['TaskTime']."'></input>";
-		
-		$query = "SELECT AlertID, TaskTime, AlertOffset, DATE_ADD( TaskTime, INTERVAL AlertOffset MINUTE) AS AlertTime FROM Alerts NATURAL JOIN Tasks WHERE TaskID='$id'";
-		$result = mysqli_query( $dbconn, $query);
+	$stmt = $dbconn->prepare( "SELECT TaskID, TaskName, TaskDesc, TaskTime FROM Tasks WHERE TaskID=? AND UserID=?");
+	$stmt->bind_param( "ss", $id, $_SESSION['UserID']);
+	$stmt->execute();
+	$stmt->bind_result( $TaskID, $TaskName, $TaskDesc, $TaskTime);
+
+	if ( $stmt->fetch()){
+		$stmt->close();
+
+		echo "Task name: <input id='taskname".$TaskID."' type='text' value='".$TaskName."'><br>";
+		echo "Task time: <input class='datetimepicker' id='datetimepicker".$TaskID."' type='text' value='".FormatDateTime( $TaskTime)."'><br>";
+		echo "Description:<br><textarea id=Desc$id>".$TaskDesc."</textarea><br>";
+		echo "<input type=hidden id=Time$TaskID value='".$TaskTime."'></input>";
+
+		$query = "SELECT AlertID, AlertOffset FROM Alerts NATURAL JOIN Tasks WHERE TaskID=?";
+		$stmt = $dbconn->prepare( $query);
+		$stmt->bind_param( "s", $id);
+		$stmt->bind_result( $AlertID, $AlertOffset);
+		$stmt->execute();
 		
 		echo "<h3>Alerts:</h3>";
 		
-		while ( $row = mysqli_fetch_array( $result))
-		{
-			extract( $row);
+		while ( $stmt->fetch()) {
 			include( "viewalert.php");		
-		}		
+		}
 		
 		echo "<input type=hidden class='Task".$TaskID."Alert' Value=".$row['AlertID'].">";
 		echo "<input type=button id=Add$TaskID value='Add Alert'></input>";

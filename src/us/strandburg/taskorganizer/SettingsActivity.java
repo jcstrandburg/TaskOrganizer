@@ -30,6 +30,6 @@ public class SettingsActivity extends PreferenceActivity {
 	@Override
 	public void onStop() {
 		super.onStop();
-		//Model.doAuthentication(); //(not currently working, maybe come back to this)
+		Model.credentialsChanged = true;
 	}
 }
