@@ -674,7 +674,7 @@ public class Model extends android.app.Application {
 									}
 								}
 								catch ( Exception e) {
-									Log.e( "Model.deleteAlert", e.getMessage());
+									Log.e( "Model.deleteAlert", e.getClass().toString() + " " + e.getStackTrace());
 								}
 							}
 						});
