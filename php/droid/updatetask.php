@@ -9,7 +9,7 @@ if ( isset( $_POST["TaskID"]) ) {
 	$taskDesc = $_POST["TaskDesc"];
 	$taskTime = $_POST["TaskTime"];
 	
-	$query = "UPDATE Tasks SET TaskName='$taskName', TaskDesc='$taskDesc', TaskTime='$taskTime' WHERE TaskID='$TaskID'";
+	$query = "UPDATE Tasks SET TaskName='$taskName', TaskDesc='$taskDesc', TaskTime='$taskTime' WHERE TaskID='$taskID'";
 	
 	mysqli_query( $dbconn, $query);
 	
